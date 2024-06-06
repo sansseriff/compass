@@ -29,6 +29,7 @@
   let Description: FullSceneDescription<ThreadGeneratorFactory<View2D>> | null = null;
   let ProjectInstance: Project | null = null;
   let PlayerInstance: PlayerType | null = null;
+  let StageInstance: StageType | null = null;
 
 
   Description = makeScene2D(function* () {
@@ -49,4 +50,44 @@
       size: ProjectInstance.meta.shared.size.get(),
     });
 
+    StageInstance = new Stage();
+    StageInstance.configure({
+      size: ProjectInstance.meta.shared.size.get(),
+    });
+
+    PlayerInstance.onRender.subscribe(async () => {
+      await StageInstance.render(
+        PlayerInstance.playback.currentScene,
+        PlayerInstance.playback.previousScene,
+      );
+    });
+
+
+    let player = $state();
+    let ratio = 2;
+
+    let previewRef: HTMLDivElement;
+
 </script>
+
+<div
+        class="preview"
+        style = "aspect-ratio: {ratio}"
+        bind:this={previewRef}
+      >
+        {#if !player}
+        <div>Press play to preview the animation</div>
+        {/if}
+      </div>
+
+
+<style>
+
+.preview {
+  background-color: var(--ifm-background-surface-color);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
