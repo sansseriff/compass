@@ -12,7 +12,7 @@
     Stage as StageType,
     ThreadGeneratorFactory,
   } from "@motion-canvas/core";
-  import type { View2D } from "@motion-canvas/2d";
+  import { Circle, View2D } from "@motion-canvas/2d";
 
   // originally loaded client side
   import {
@@ -22,18 +22,35 @@
     Stage,
     ValueDispatcher,
     DefaultPlugin,
+    createRef,
+    all,
   } from "@motion-canvas/core";
 
   import { makeScene2D, Code, LezerHighlighter } from "@motion-canvas/2d";
+  import { onMount } from "svelte";
 
   let Description: FullSceneDescription<ThreadGeneratorFactory<View2D>> | null = null;
   let ProjectInstance: Project | null = null;
   let PlayerInstance: PlayerType | null = null;
   let StageInstance: StageType | null = null;
 
+  let player = $state();
+  let ratio = 2;
 
-  Description = makeScene2D(function* () {
-    yield;
+  let previewRef: HTMLDivElement;
+
+
+
+  Description = makeScene2D(function* (view) {
+    // view.fill('#242424'); // set the background of this scene
+    const circle = new Circle({ x: -300, y: 0, width: 100, height: 100, fill:"#e13238" });
+
+    const myCircle = createRef<Circle>()
+    view.add(circle);
+    yield* all(
+      circle.position.x(100,1).to(-300,1),
+      circle.fill('#e6a700', 1).to('#e13238', 1),
+    )
   }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
 
   ProjectInstance = {
@@ -47,6 +64,7 @@
   ProjectInstance.meta = new ProjectMetadata(ProjectInstance);
   ProjectInstance.meta.shared.size.set(960);
   PlayerInstance = new Player(ProjectInstance, {
+      fps: 60,
       size: ProjectInstance.meta.shared.size.get(),
     });
 
@@ -62,12 +80,20 @@
       );
     });
 
+    PlayerInstance.onRecalculated.subscribe(() => {
+      if (StageInstance.finalBuffer.parentElement !== previewRef) {
+        previewRef?.append(StageInstance.finalBuffer);
+        // CurrentSetter(PlayerInstance);
+        player = PlayerInstance;
+      }
+    });
 
-    let player = $state();
-    let ratio = 2;
+    onMount(() => {
+      PlayerInstance.togglePlayback()
+    });
 
-    let previewRef: HTMLDivElement;
 
+    
 </script>
 
 <div
@@ -79,6 +105,8 @@
         <div>Press play to preview the animation</div>
         {/if}
       </div>
+      <button onclick={() => PlayerInstance.togglePlayback()}>toggle playback</button>
+      <!-- <button onclick={console.log(PlayerInstance.)}>Info</button> -->
 
 
 <style>
