@@ -5,16 +5,18 @@
 
   //borrowing from https://github.com/motion-canvas/motion-canvas/blob/main/packages/docs/src/components/Fiddle/SharedPlayer.ts
 
-  import type {
-    FullSceneDescription,
-    Player as PlayerType,
-    Project,
-    Stage as StageType,
-    ThreadGeneratorFactory,
-  } from "@motion-canvas/core";
+  // import type {
+  //   FullSceneDescription,
+  //   Player as PlayerType,
+  //   Project,
+  //   Stage as StageType,
+  //   ThreadGeneratorFactory,
+  // } from "@motion-canvas/core";
+
+  import type { Player as PlayerType } from "@motion-canvas/core";
   import { Circle, View2D } from "@motion-canvas/2d";
 
-  // originally loaded client side
+  // // originally loaded client side
   import {
     Logger,
     Player,
@@ -28,125 +30,160 @@
 
   import { makeScene2D, Code, LezerHighlighter } from "@motion-canvas/2d";
   import { onMount } from "svelte";
+  import { borrowPlayer, updatePlayer } from "./util.svelte";
+  import { ratio } from "./util.svelte"
 
-  let Description: FullSceneDescription<ThreadGeneratorFactory<View2D>> | null =
-    null;
-  let ProjectInstance: Project | null = null;
-  let PlayerInstance: PlayerType | null = null;
-  let StageInstance: StageType | null = null;
+  // import { Description } from "./app";
 
-  let player = $state();
-  let ratio = 2;
+  
+  let player: PlayerType | null = $state(null);
+  let inputText = $state("");
+  
 
   let previewRef: HTMLDivElement;
 
-  Description = makeScene2D(function* (view) {
-    // view.fill('#242424'); // set the background of this scene
-    const circle = new Circle({
-      x: -300,
-      y: 0,
-      width: 100,
-      height: 100,
-      fill: "#e13238",
-    });
+  
 
-    const myCircle = createRef<Circle>();
-    view.add(circle);
-    yield* all(
-      circle.position.x(100, 1).to(-300, 1),
-      circle.fill("#e6a700", 1).to("#e13238", 1)
-    );
-  }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
+  function createScene() {
+    const Description = makeScene2D(function* (view) {
+      // view.fill('#242424'); // set the background of this scene
+      const circle = new Circle({
+        x: -100,
+        y: 0,
+        width: 100,
+        height: 100,
+        fill: "#e13238",
+      });
 
-  ProjectInstance = {
-    name: "fiddle",
-    logger: new Logger(),
-    plugins: [DefaultPlugin()],
-    scenes: [Description],
-    experimentalFeatures: true,
-  } as Project;
+      const myCircle = createRef<Circle>();
+      view.add(circle);
+      yield* all(
+        circle.position.x(100, 1).to(-100, 1),
+        circle.fill("#e6a700", 1).to("#e13238", 1)
+      );
+    }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
 
-  ProjectInstance.meta = new ProjectMetadata(ProjectInstance);
-  ProjectInstance.meta.shared.size.set(960);
-  PlayerInstance = new Player(ProjectInstance, {
-    fps: 60,
-    size: ProjectInstance.meta.shared.size.get(),
-  });
+    return Description;
+  }
 
-  StageInstance = new Stage();
-  StageInstance.configure({
-    size: ProjectInstance.meta.shared.size.get(),
-  });
+  function otherScene() {
+    const Description = makeScene2D(function* (view) {
+      // view.fill('#242424'); // set the background of this scene
+      const circle = new Circle({
+        x: -100,
+        y: 0,
+        width: 100,
+        height: 100,
+        fill: "#000000",
+      });
 
-  PlayerInstance.onRender.subscribe(async () => {
-    await StageInstance.render(
-      PlayerInstance.playback.currentScene,
-      PlayerInstance.playback.previousScene
-    );
-  });
+      const myCircle = createRef<Circle>();
+      view.add(circle);
+      yield* all(
+        circle.position.x(100, 1).to(-100, 1),
+        circle.fill("#fffff2", 1).to("#000000", 1)
+      );
+    }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
 
-  PlayerInstance.onRecalculated.subscribe(() => {
-    if (StageInstance.finalBuffer.parentElement !== previewRef) {
-      previewRef?.append(StageInstance.finalBuffer);
-      // CurrentSetter(PlayerInstance);
-      player = PlayerInstance;
-    }
-  });
+    return Description;
+  }
+
+  function init() {
+    const scene = createScene();
+
+    const containerWidth = document.body.clientWidth;
+    const initialWidthPx = document.body.clientWidth * (writingAreaWidth / 100);
+
+    const rightWidthPx = containerWidth - initialWidthPx
+    player = borrowPlayer(previewRef, player, rightWidthPx);
+    updatePlayer(scene);
+  }
+
+  
+  function swapScene() {
+    const scene = otherScene();
+    // player = borrowPlayer(previewRef, player, writingAreaWidth);
+    updatePlayer(scene);
+  }
+  
+  // init();
 
   onMount(() => {
-    PlayerInstance.togglePlayback();
+    init();
+
+    console.log("player: ", player);
+    // PlayerInstance.togglePlayback();
   });
 
-  let writingAreaWidth = $state(50); // Initial width in percentage
+  let writingAreaWidth = $state(30); // Initial width in percentage
 
   function startDrag(event) {
-      const startX = event.clientX;
-      // Convert initialWidth from percentage to pixels for accurate calculation
-      const initialWidthPx = document.body.clientWidth * (writingAreaWidth / 100);
+    const startX = event.clientX;
+    // Convert initialWidth from percentage to pixels for accurate calculation
+    const initialWidthPx = document.body.clientWidth * (writingAreaWidth / 100);
 
-      function onMouseMove(event) {
-        const dx = event.clientX - startX;
-        const containerWidth = document.body.clientWidth;
-        console.log("containerWidth: ", containerWidth);
+    function onMouseMove(event) {
+      const dx = event.clientX - startX;
+      const containerWidth = document.body.clientWidth;
 
-        // Calculate new width in pixels, then convert back to percentage
+      // Calculate new width in pixels, then convert back to percentage
 
-        
+      const newWidthPx = initialWidthPx + dx;
 
-        const newWidthPx = initialWidthPx + dx;
+      const rightWidthPx = containerWidth - newWidthPx;
 
-        const rightWidthPx = containerWidth - newWidthPx;
+      const scene = createScene();
+      player = borrowPlayer(previewRef, player, newWidthPx);
+      updatePlayer(scene);
 
-        ProjectInstance.meta.shared.size.set(rightWidthPx);
+      console.log("right width: ", rightWidthPx);
 
-        writingAreaWidth = (newWidthPx * 100) / containerWidth;
-        console.log("first: ", writingAreaWidth);
-      }
+      // console.log("setting new width: ", newWidthPx);
 
-      function onMouseUp() {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-      }
-
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+      writingAreaWidth = (newWidthPx * 100) / containerWidth;
     }
+
+    function onMouseUp() {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    }
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  }
+
+
+  function setWidth(width_string: string) {
+    writingAreaWidth = parseInt(width_string);
+
+    const containerWidth = document.body.clientWidth;
+
+    const scene = createScene();
+    player = borrowPlayer(previewRef, player, writingAreaWidth);
+    updatePlayer(scene);
+  }
 </script>
 
 <div class="left-right">
-  <div class="writing-area" style="width: {writingAreaWidth}%;">
+  <!-- style="width: {writingAreaWidth}%; -->
+  <div class="writing-area">
     <textarea name="paragraph_text" rows="10" style="width: 100%;"></textarea>
   </div>
   <div class="divider" onmousedown={startDrag}></div>
-  <div class="visual-area" style="width: {100 - writingAreaWidth}%;">
-    <div class="preview" style="aspect-ratio: {ratio}" bind:this={previewRef}>
+  <!-- style="width: {100 - writingAreaWidth}%;" -->
+  <div class="visual-area" >
+    <div class="preview" style="aspect-ratio: 2" bind:this={previewRef}>
       {#if !player}
         <div>Press play to preview the animation</div>
       {/if}
     </div>
-    <button onclick={() => PlayerInstance.togglePlayback()}
+    <button onclick={() => player.togglePlayback()}
       >toggle playback</button
     >
+    <input bind:value={inputText} type="text">
+    <button onclick={() => setWidth(inputText)}>Submit</button>
+
+    <button onclick={swapScene}>New Scene</button>
   </div>
 </div>
 
@@ -167,17 +204,21 @@
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Inner shadow for depth */
     outline: none; /* Removes the default focus outline */
     resize: vertical; /* Allows vertical resizing only */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern, readable font */
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* Modern, readable font */
     font-size: 16px; /* Adequate font size for readability */
     line-height: 1.5; /* Spacing between lines */
     color: #333; /* Darker text for better readability */
     background-color: #f9f9f9; /* Light background color */
-    transition: border-color 0.3s, box-shadow 0.3s; /* Smooth transition for focus effect */
+    transition:
+      border-color 0.3s,
+      box-shadow 0.3s; /* Smooth transition for focus effect */
   }
 
   .writing-area textarea:focus {
     border-color: #007bff; /* Highlight color when focused */
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 123, 255, 0.5); /* More pronounced shadow on focus */
+    box-shadow:
+      inset 0 1px 3px rgba(0, 0, 0, 0.1),
+      0 0 8px rgba(0, 123, 255, 0.5); /* More pronounced shadow on focus */
   }
 
   .writing-area {
