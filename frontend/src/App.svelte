@@ -14,7 +14,7 @@
   // } from "@motion-canvas/core";
 
   import type { Player as PlayerType } from "@motion-canvas/core";
-  import { Circle, View2D } from "@motion-canvas/2d";
+  import { Circle, View2D, Rect, Line } from "@motion-canvas/2d";
 
   // // originally loaded client side
   import {
@@ -41,7 +41,8 @@
   
 
   let previewRef: HTMLDivElement;
-
+  let padding_width = 30;
+  let canvas_width = 500;
   
 
   function createScene() {
@@ -53,6 +54,7 @@
         width: 100,
         height: 100,
         fill: "#e13238",
+        // antialiased: false,
       });
 
       const myCircle = createRef<Circle>();
@@ -69,20 +71,35 @@
   function otherScene() {
     const Description = makeScene2D(function* (view) {
       // view.fill('#242424'); // set the background of this scene
-      const circle = new Circle({
-        x: -100,
-        y: 0,
-        width: 100,
-        height: 100,
-        fill: "#000000",
-      });
+      // const circle = new Rect({
+      //   x: -100,
+      //   y: 0,
+      //   width: 100,
+      //   height: 100,
+      //   rotation: 180,
+      //   fill: "#000000",
+      //   // antialiased: false,
+      // });
 
-      const myCircle = createRef<Circle>();
-      view.add(circle);
-      yield* all(
-        circle.position.x(100, 1).to(-100, 1),
-        circle.fill("#fffff2", 1).to("#000000", 1)
-      );
+      const line = new Line({
+                  endArrow:true,
+                  arrowSize: 20,
+                  // lineCap:"butt",
+                  stroke:"424B54",
+                  lineWidth:20,
+                  points:
+                    [[450, 0],
+                    [-150, 0]],});
+
+      view.add(line);
+
+      // const myCircle = createRef<Circle>();
+      // view.add(circle);
+      // yield* all(
+      //   circle.position.x(100, 1).to(-100, 1),
+      //   circle.rotation(0,1).to(180,1),
+      //   circle.fill("#fffff2", 1).to("#000000", 1)
+      // );
     }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
 
     return Description;
@@ -92,7 +109,7 @@
     const scene = createScene();
 
     const containerWidth = document.body.clientWidth;
-    const initialWidthPx = document.body.clientWidth * (writingAreaWidth / 100);
+    const initialWidthPx = document.body.clientWidth * (visualAreaWidth / 100);
 
     const rightWidthPx = containerWidth - initialWidthPx
     player = borrowPlayer(previewRef, player, rightWidthPx);
@@ -106,7 +123,16 @@
     updatePlayer(scene);
   }
   
-  // init();
+  
+  // function setWidth(width_string: string) {
+  //   writingAreaWidth = parseInt(width_string);
+
+  //   const containerWidth = document.body.clientWidth;
+
+  //   const scene = createScene();
+  //   player = borrowPlayer(previewRef, player, writingAreaWidth);
+  //   updatePlayer(scene);
+  // }
 
   onMount(() => {
     init();
@@ -115,32 +141,31 @@
     // PlayerInstance.togglePlayback();
   });
 
-  let writingAreaWidth = $state(30); // Initial width in percentage
+  let visualAreaWidth = $state(50); // Initial width in percentage
 
   function startDrag(event) {
     const startX = event.clientX;
+
+    console.log("initial client x: ", startX);
     // Convert initialWidth from percentage to pixels for accurate calculation
-    const initialWidthPx = document.body.clientWidth * (writingAreaWidth / 100);
+
+    
+
+    const initialWidthPx = (document.body.clientWidth - event.clientX);
 
     function onMouseMove(event) {
       const dx = event.clientX - startX;
+      console.log("initial mouse move: ", dx);
       const containerWidth = document.body.clientWidth;
 
-      // Calculate new width in pixels, then convert back to percentage
+      const newWidthPx = initialWidthPx - dx - (2*padding_width);
 
-      const newWidthPx = initialWidthPx + dx;
-
-      const rightWidthPx = containerWidth - newWidthPx;
+      canvas_width = Math.floor(newWidthPx);
 
       const scene = createScene();
-      player = borrowPlayer(previewRef, player, newWidthPx);
+      player = borrowPlayer(previewRef, player, canvas_width);
       updatePlayer(scene);
 
-      console.log("right width: ", rightWidthPx);
-
-      // console.log("setting new width: ", newWidthPx);
-
-      writingAreaWidth = (newWidthPx * 100) / containerWidth;
     }
 
     function onMouseUp() {
@@ -153,37 +178,28 @@
   }
 
 
-  function setWidth(width_string: string) {
-    writingAreaWidth = parseInt(width_string);
-
-    const containerWidth = document.body.clientWidth;
-
-    const scene = createScene();
-    player = borrowPlayer(previewRef, player, writingAreaWidth);
-    updatePlayer(scene);
-  }
 </script>
 
 <div class="left-right">
   <!-- style="width: {writingAreaWidth}%; -->
-  <div class="writing-area">
-    <textarea name="paragraph_text" rows="10" style="width: 100%;"></textarea>
+  <div class="writing-area" style = "padding: {padding_width}px" >
+    <textarea name="paragraph_text"></textarea>
   </div>
-  <div class="divider" onmousedown={startDrag}></div>
+  <button class="divider" onmousedown={startDrag} role="separator" aria-orientation="vertical"></button>
   <!-- style="width: {100 - writingAreaWidth}%;" -->
-  <div class="visual-area" >
-    <div class="preview" style="aspect-ratio: 2" bind:this={previewRef}>
+  <div class="visual-area" style = "padding: {padding_width}px; width: 100%">
+    <div class="preview" bind:this={previewRef}>
       {#if !player}
         <div>Press play to preview the animation</div>
       {/if}
     </div>
-    <button onclick={() => player.togglePlayback()}
+    <button class="button" onclick={() => player.togglePlayback()}
       >toggle playback</button
     >
     <input bind:value={inputText} type="text">
-    <button onclick={() => setWidth(inputText)}>Submit</button>
+    <button class="button" onclick={() => setWidth(inputText)}>Submit</button>
 
-    <button onclick={swapScene}>New Scene</button>
+    <button class="button" onclick={swapScene}>New Scene</button>
   </div>
 </div>
 
@@ -191,67 +207,71 @@
   .left-right {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-around;
     height: 100vh;
   }
 
-  .writing-area textarea {
-    width: 100%; /* Ensures the textarea fills its container */
-    height: auto; /* Adjusts height based on content, can set to a fixed height if preferred */
-    padding: 12px; /* Adds some space inside the textarea for text */
-    border: 1px solid #ccc; /* Subtle border color */
-    border-radius: 8px; /* Rounded corners for a modern look */
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Inner shadow for depth */
-    outline: none; /* Removes the default focus outline */
-    resize: vertical; /* Allows vertical resizing only */
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* Modern, readable font */
-    font-size: 16px; /* Adequate font size for readability */
-    line-height: 1.5; /* Spacing between lines */
-    color: #333; /* Darker text for better readability */
-    background-color: #f9f9f9; /* Light background color */
-    transition:
-      border-color 0.3s,
-      box-shadow 0.3s; /* Smooth transition for focus effect */
-  }
-
-  .writing-area textarea:focus {
-    border-color: #007bff; /* Highlight color when focused */
-    box-shadow:
-      inset 0 1px 3px rgba(0, 0, 0, 0.1),
-      0 0 8px rgba(0, 123, 255, 0.5); /* More pronounced shadow on focus */
-  }
-
   .writing-area {
-    /* border-right: 1px solid grey; */
+    width: 10000%; /* this is some weird hack to make the textarea fill the space */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items:end;
     justify-content: center;
-    /* border box */
-    box-sizing: border-box;
-    margin: 2rem;
   }
 
+
+
   .divider {
-    background-color: #ccc;
-    width: 5px;
+    background-color: #f2f2f2;
     cursor: ew-resize;
+    padding: 2px;
+    /* box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.1); */
   }
 
   .visual-area {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-around;
   }
 
+
+  .writing-area textarea {
+    width: 100%;
+    height: 10rem; 
+    
+    border: 1px solid #ccc; 
+    border-radius: 8px; 
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); 
+    outline: none; 
+    resize: vertical;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; 
+    font-size: 16px; 
+    line-height: 1.5; 
+    color: #333; 
+    background-color: #fafafa;
+    transition:
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+
+  .writing-area textarea:focus {
+    border-color: #007bff;
+    box-shadow:
+      inset 0 1px 3px rgba(0, 0, 0, 0.1),
+      0 0 8px rgba(0, 123, 255, 0.5);
+  }
+
   .preview {
+    width: auto;
+    height: auto;
     background-color: var(--ifm-background-surface-color);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid grey;
-    margin: 3rem;
+    border: 1px solid rgb(226, 226, 226);
+    border-radius: 10px;
   }
 </style>
