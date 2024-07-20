@@ -1,20 +1,6 @@
 <script lang="ts">
-  // import svelteLogo from './assets/svelte.svg'
-  // import viteLogo from '/vite.svg'
-  // import Counter from './lib/Counter.svelte'
-
-  //borrowing from https://github.com/motion-canvas/motion-canvas/blob/main/packages/docs/src/components/Fiddle/SharedPlayer.ts
-
-  // import type {
-  //   FullSceneDescription,
-  //   Player as PlayerType,
-  //   Project,
-  //   Stage as StageType,
-  //   ThreadGeneratorFactory,
-  // } from "@motion-canvas/core";
-
-  import type { Player as PlayerType } from "@motion-canvas/core";
-  import { Circle, View2D, Rect, Line } from "@motion-canvas/2d";
+  import type { Player as PlayerTyp, FullSceneDescription, ThreadGeneratorFactory } from "@motion-canvas/core";
+  import { Circle, View2D, Rect, Line, Node } from "@motion-canvas/2d";
 
   // // originally loaded client side
   import {
@@ -30,10 +16,13 @@
 
   import { makeScene2D, Code, LezerHighlighter } from "@motion-canvas/2d";
   import { onMount } from "svelte";
-  import { borrowPlayer, updatePlayer } from "./util.svelte";
-  import { ratio } from "./util.svelte"
+  import { borrowPlayer, updatePlayer } from "./util";
+  import { ratio } from "./util"
 
-  // import { Description } from "./app";
+  import { getScene } from "./api";
+  import { scale } from "svelte/transition";
+
+  import { createSceneFromText } from "./instantiate";
 
   
   let player: PlayerType | null = $state(null);
@@ -45,26 +34,35 @@
   let canvas_width = 500;
   
 
-  function createScene() {
+  function createScene(scale_factor = 1) {
     const Description = makeScene2D(function* (view) {
       // view.fill('#242424'); // set the background of this scene
+      
+
       const circle = new Circle({
         x: -100,
         y: 0,
         width: 100,
         height: 100,
         fill: "#e13238",
-        // antialiased: false,
       });
 
-      const myCircle = createRef<Circle>();
-      view.add(circle);
+      const node = new Node({
+        x: 0,
+        y: 0,
+        children: [circle],
+        scale: [scale_factor,scale_factor]
+      });
+
+      console.log("this is a circle: ", circle);
+
+
+      view.add(node);
       yield* all(
         circle.position.x(100, 1).to(-100, 1),
         circle.fill("#e6a700", 1).to("#e13238", 1)
       );
     }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
-
     return Description;
   }
 
@@ -92,21 +90,15 @@
                     [-150, 0]],});
 
       view.add(line);
-
-      // const myCircle = createRef<Circle>();
-      // view.add(circle);
-      // yield* all(
-      //   circle.position.x(100, 1).to(-100, 1),
-      //   circle.rotation(0,1).to(180,1),
-      //   circle.fill("#fffff2", 1).to("#000000", 1)
-      // );
     }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
 
     return Description;
   }
 
   function init() {
-    const scene = createScene();
+
+    const size =  document.body.clientWidth/2;
+    const scene = createScene(size/960);
 
     const containerWidth = document.body.clientWidth;
     const initialWidthPx = document.body.clientWidth * (visualAreaWidth / 100);
@@ -122,47 +114,26 @@
     // player = borrowPlayer(previewRef, player, writingAreaWidth);
     updatePlayer(scene);
   }
-  
-  
-  // function setWidth(width_string: string) {
-  //   writingAreaWidth = parseInt(width_string);
 
-  //   const containerWidth = document.body.clientWidth;
-
-  //   const scene = createScene();
-  //   player = borrowPlayer(previewRef, player, writingAreaWidth);
-  //   updatePlayer(scene);
-  // }
 
   onMount(() => {
     init();
-
-    console.log("player: ", player);
-    // PlayerInstance.togglePlayback();
   });
 
   let visualAreaWidth = $state(50); // Initial width in percentage
 
   function startDrag(event) {
     const startX = event.clientX;
-
-    console.log("initial client x: ", startX);
-    // Convert initialWidth from percentage to pixels for accurate calculation
-
-    
-
     const initialWidthPx = (document.body.clientWidth - event.clientX);
-
     function onMouseMove(event) {
       const dx = event.clientX - startX;
-      console.log("initial mouse move: ", dx);
       const containerWidth = document.body.clientWidth;
 
-      const newWidthPx = initialWidthPx - dx - (2*padding_width);
+      const newWidthPx = initialWidthPx - dx - (2*padding_width)*0.95;
 
       canvas_width = Math.floor(newWidthPx);
 
-      const scene = createScene();
+      const scene = createScene(canvas_width/960);
       player = borrowPlayer(previewRef, player, canvas_width);
       updatePlayer(scene);
 
@@ -177,13 +148,31 @@
     window.addEventListener("mouseup", onMouseUp);
   }
 
+  function handleText(event) {
+    inputText = event.target.value;
+    if (event.shiftKey && event.key === 'Enter') {
+      event.preventDefault(); // Prevent the default action to avoid a new line in the textarea
+      console.log("Sending textarea content to server:", inputText);
+
+
+      getScene(inputText).then((response) => {
+        console.log("creating scene...");
+        const scene = createSceneFromText(response, canvas_width/960);
+
+        // console.log("scene: ", scene);
+        updatePlayer(scene);
+      })
+    }
+
+  }
+
 
 </script>
 
 <div class="left-right">
   <!-- style="width: {writingAreaWidth}%; -->
   <div class="writing-area" style = "padding: {padding_width}px" >
-    <textarea name="paragraph_text"></textarea>
+    <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
   </div>
   <button class="divider" onmousedown={startDrag} role="separator" aria-orientation="vertical"></button>
   <!-- style="width: {100 - writingAreaWidth}%;" -->
@@ -196,8 +185,6 @@
     <button class="button" onclick={() => player.togglePlayback()}
       >toggle playback</button
     >
-    <input bind:value={inputText} type="text">
-    <button class="button" onclick={() => setWidth(inputText)}>Submit</button>
 
     <button class="button" onclick={swapScene}>New Scene</button>
   </div>
@@ -224,8 +211,13 @@
   .divider {
     background-color: #f2f2f2;
     cursor: ew-resize;
-    padding: 2px;
+    padding: 1px;
     /* box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.1); */
+    transition: background-color 0.9s;
+  }
+
+  .divider:hover {
+    background-color: #4998ff;
   }
 
   .visual-area {

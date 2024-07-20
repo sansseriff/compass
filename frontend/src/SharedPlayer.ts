@@ -97,6 +97,8 @@ export async function borrowPlayer(
   ratio: number,
   onError?: (message: string) => void,
 ): Promise<PlayerType> {
+
+  
   if (setter === CurrentSetter) return;
   if (
     StageInstance &&
