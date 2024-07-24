@@ -23,6 +23,7 @@ import instructor
 from dotenv import load_dotenv  # Import load_dotenv
 # Load environment variables from .env file
 import openai
+from groq import Groq
 
 from backend.models import Circle, Polygon, Rect
 
@@ -60,8 +61,8 @@ app.add_middleware(
 
 
 
-client = instructor.from_openai(OpenAI())
-
+client_groq = instructor.from_groq(Groq(), mode=instructor.Mode.TOOLS)
+client_openai = instructor.from_openai(OpenAI())
 
 class SearchTerms(BaseModel):
     search_terms: list[str]
@@ -73,30 +74,28 @@ class SearchTerms(BaseModel):
 class Message(BaseModel):
     message: str
 
+    # Examples:
+    # INPUT: A triangle sits on top of a long and thing blue rectangle. Hovering above the triangle is a small red circle.
+    # OUTPUT: "triangle", "long blue rectangle", "rectangle", "small red circle", "circle"
+
+    # INPUT: "Below a square is a large green circle. To the right of the circle is a small yellow triangle."
+    # OUTPUT: "square", "large green circle", "circle", "small yellow triangle", "triangle"
+
 @app.post("/scene")
 def text_to_search(msg: Message):
 
     text = msg.message
-    prompt = f"""make a list of search terms that might label the nodes in the following text, if 
-    the text was expressed as a knowledge graph. Include both nouns and nouns with modifiers.
-
-    Examples:
-    INPUT: A triangle sits on top of a long and thing blue rectangle. Hovering above the triangle is a small red circle.
-    OUTPUT: "triangle", "long blue rectangle", "rectangle", "small red circle", "circle"
-
-    INPUT: "Below a square is a large green circle. To the right of the circle is a small yellow triangle."
-    OUTPUT: "square", "large green circle", "circle", "small yellow triangle", "triangle"
-
-    INPUT: {text}
-    OUTPUT: """
-    # logger.info("starting openai call: %s", prompt)
+    prompt = f""" pull terms from the following text for building a knowledge graph: '{text}'"""
+    logger.info("starting openai call: %s", prompt)
 
     completion = SearchTerms(search_terms=[])
 
     try:
-        completion: SearchTerms = client.chat.completions.create(
+        completion: SearchTerms = client_groq.chat.completions.create(
             # model="gpt-4-turbo",
-            model="gpt-4o-mini",
+            # model="llama-3.1-70b-versatile",
+            model="llama-3.1-8b-instant",
+            # model="mixtral-8x7b-32768",
             messages=[
                 {
                     "role": "user",
@@ -112,7 +111,12 @@ def text_to_search(msg: Message):
 
     except Exception as e:
         # general exception handling
-        logger.error("%s", e)
+        
+        logger.error("ERROR! %s", e)
+        return None
+
+    # words = msg.message.split(" ")
+    # completion = SearchTerms(search_terms=words)
 
     models, interfaces = search_search(completion)
     return matches_to_scene(models, interfaces, text)
@@ -142,7 +146,7 @@ def search_search(s: SearchTerms):
 
         # check if class has a "names" attribute
         if not hasattr(obj, "names"):
-            print("continued 1")
+            # print("continued 1")
             continue
 
         synonyms = obj.names
@@ -165,7 +169,7 @@ def search_search(s: SearchTerms):
             if len(words) > 1:
                 search_terms_lower.append(words[-1])
 
-        logger.info("expanded search terms: %s", search_terms_lower)
+        # logger.info("expanded search terms: %s", search_terms_lower)
 
         synonyms_lower = [syn.lower() for syn in synonyms]
         synonyms_plural_lower = [f"{syn}s" for syn in synonyms_lower]
@@ -216,15 +220,17 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
     prompt = f"""Build a scene description. 
     Common object parameters:
-    x: 0 is center, positive is right (max: 480), negative is left (min: -480)
-    y: 0 is center, positive is up (max: 270), negative is down (min: -270)
+    x: -480(left) > x < 480(right). 0 is center of screen.
+    y: -270(bottom) > y < 270(top). 0 is center of screen.
     
     The scene description: {text}"""
 
     try:
-        completion = client.chat.completions.create(
-            # model="gpt-4-turbo",
+        completion = client_openai.chat.completions.create(
             model="gpt-4o-mini",
+            # model="llama-3.1-70b-versatile",
+            # model="llama-3.1-8b-instant",
+            # model="mixtral-8x7b-32768",
             messages=[
                 {
                     "role": "user",
@@ -243,15 +249,16 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
         #     print(item)
         
 
-    except openai.RateLimitError as e:
-        # request limit exceeded or something.
-        logger.warning("%s", e)
+    # except openai.RateLimitError as e:
+    #     # request limit exceeded or something.
+    #     logger.warning("%s", e)
 
     except Exception as e:
         # general exception handling
-        logger.error("%s", e)
+        logger.error("ERROR: %s", e)
+        return None
 
-    print(completion.model_dump_json())
+    # print(completion.model_dump_json())
 
     return completion
 

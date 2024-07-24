@@ -24,8 +24,8 @@ class C(BaseModel):
 
 class InterfaceFiber(BaseModel):
     t: Literal["InterfaceFiber"] = "InterfaceFiber"
-    input: C
-    output: C
+    input: C = Field(..., description="either input or output MUST be of type Fiber")
+    output: C = Field(..., description="either input or output MUST be of type Fiber")
 
 
 class SuperNode:
