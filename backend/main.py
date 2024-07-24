@@ -14,7 +14,7 @@ from pydantic import Field
 from backend.server_logging import get_logger
 logger = get_logger(__name__)
 
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
 
 
 from openai import OpenAI
@@ -26,6 +26,9 @@ import openai
 
 from backend.models import Circle, Polygon, Rect
 
+from backend.models import SuperNode
+from typing import cast
+from typing import Any
 
 import importlib
 import inspect
@@ -111,8 +114,8 @@ def text_to_search(msg: Message):
         # general exception handling
         logger.error("%s", e)
 
-    models = search_search(completion)
-    return matches_to_scene(models, text)
+    models, interfaces = search_search(completion)
+    return matches_to_scene(models, interfaces, text)
 
         
 
@@ -120,21 +123,33 @@ def text_to_search(msg: Message):
 def search_search(s: SearchTerms):
     models_module = importlib.import_module("backend.models")
     print("search terms: ", s.search_terms)
-    matched_classes: list[BaseModel] = []
+    matched_objects: list[type[BaseModel]] = []
+    matched_interfaces: list[type[BaseModel]] = []
 
     for name, obj in inspect.getmembers(models_module, inspect.isclass):
         # Ensure the class is defined in the models_module
-        if inspect.getmodule(obj) != models_module:
+        # if inspect.getmodule(obj) != models_module:
+        #     continue
+
+        # # Check if the class has a 'name' attribute and it is a Literal
+        # hints = get_type_hints(obj)
+        # if 'name' not in hints or get_origin(hints['name']) != Literal:
+        #     continue
+
+        # # Extract the possible values from the Literal type hint for 'name'
+        # synonyms = hints['name'].__args__
+        # logger.info("synonyms: %s", synonyms)
+
+        # check if class has a "names" attribute
+        if not hasattr(obj, "names"):
+            print("continued 1")
             continue
 
-        # Check if the class has a 'name' attribute and it is a Literal
-        hints = get_type_hints(obj)
-        if 'name' not in hints or get_origin(hints['name']) != Literal:
-            continue
+        synonyms = obj.names
 
-        # Extract the possible values from the Literal type hint for 'name'
-        synonyms = hints['name'].__args__
-        logger.info("synonyms: %s", synonyms)
+        obj = cast(type[SuperNode], obj)
+
+        obj_instance = obj()
 
         # Convert search terms and synonyms to lowercase for case-insensitive comparison
         search_terms_lower = [term.lower() for term in s.search_terms]
@@ -158,41 +173,56 @@ def search_search(s: SearchTerms):
 
         # Check if any of the search terms match the class name or any of the synonyms
         if any(term in name.lower() or term in synonyms_lower for term in search_terms_lower):
-            matched_classes.append(obj)
 
+            
+            matched_objects.extend(obj_instance.model())
 
-    # print("MATCHED CLASSES: ", matched_classes)
+            matched_interfaces.extend(obj_instance.add_interface())
 
-
-    # for cls in matched_classes:
-    #     print(f"Class: {cls.__name__}")
-    #     if hasattr(cls, "__fields__"):  # Check if Pydantic BaseModel or similar
-    #         for field_name, field_info in cls.__fields__.items():
-    #             print(f"  Field: {field_name}, Type: {field_info}")
-    #     else:
-    #         print("  No fields information available.")
-
-
-
-    return matched_classes
+    return (matched_objects, matched_interfaces)
 
 
 
 
-def matches_to_scene(matched: list[BaseModel], text: str):
+def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces: list[Union[type[BaseModel], Any]], text: str):
 
-    print("matched: ", matched)
-    GenericObject = Annotated[Union[*matched], Field(discriminator='t')] # type: ignore
+    # print("matched: ", matched_objects)
 
-    class ReturnType(BaseModel):
-        scene: list[GenericObject]
+    # if len(matched_interfaces) == 0:
+    #     matched_interfaces.append(Any)
+    
+    GenericObject = Annotated[Union[*matched_objects], Field(discriminator='t')] # type: ignore
+    
+
+    if len(matched_interfaces) == 0:
+        ReturnType = create_model(
+            'ReturnType',
+            objects=(list[GenericObject], ...))
+    else:
+        GenericInterface = Union[*matched_interfaces] # type: ignore
+        
+        ReturnType = create_model(
+            'ReturnType',
+            objects=(list[GenericObject], ...),
+            interfaces=(list[GenericInterface], ...))
+
+        
+
+    # class ReturnType(BaseModel):
+    #     objects: list[GenericObject] = []
+    #     interfaces: list[GenericInterface] = []
 
     # completion = ReturnType(scene=[Circle(name="circle", size=30, fill="green", position=Vector(x=0, y=0))])
 
-    prompt = f"Build a scene description that matches the following text. {text}"
+    prompt = f"""Build a scene description. 
+    Common object parameters:
+    x: 0 is center, positive is right (max: 480), negative is left (min: -480)
+    y: 0 is center, positive is right (max: 480), negative is left (min: -480)
+    
+    The scene description: {text}"""
 
     try:
-        completion: ReturnType = client.chat.completions.create(
+        completion = client.chat.completions.create(
             # model="gpt-4-turbo",
             model="gpt-4o-mini",
             messages=[
@@ -203,12 +233,14 @@ def matches_to_scene(matched: list[BaseModel], text: str):
             ],
             response_model=ReturnType,
         )
+        print("completion: ", completion)
+        # print("completion raw: ", completion._raw_response)
 
         # Its now a dict, no need to worry about json loading so many times
         # response_data = completion.model_dump()
 
-        for item in completion.scene:
-            print(item)
+        # for item in completion.objects:
+        #     print(item)
         
 
     except openai.RateLimitError as e:
@@ -218,6 +250,8 @@ def matches_to_scene(matched: list[BaseModel], text: str):
     except Exception as e:
         # general exception handling
         logger.error("%s", e)
+
+    print(completion.model_dump_json())
 
     return completion
 

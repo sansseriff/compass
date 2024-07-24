@@ -6,7 +6,7 @@ import type {
   ThreadGeneratorFactory,
 } from "@motion-canvas/core";
 
-import type { ReturnType } from "./api";
+import type { ReturnType } from "./fetch_types";
 
 type Constructor<T> = new (data: any) => T;
 
@@ -39,13 +39,15 @@ function createObject(data: any): Node | null {
   }
 }
 
+
 export function createSceneFromText(
   jsonData: ReturnType,
   scale_factor: number
 ) {
 
   const Description = makeScene2D(function* (view) {
-    const nodes = jsonData.scene.map((data) => {
+
+    const nodes = jsonData.objects.map((data) => {
       const obj = createObject(data);
 
       return obj;

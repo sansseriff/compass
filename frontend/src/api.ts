@@ -30,10 +30,6 @@ interface Message {
     message: string;
 }
 
-export interface ReturnType {
-    scene: [];
-}
-
 export function getScene(message: string): Promise<ReturnType> {
     return fetchWithConfig("/scene", "POST", { message });
 }

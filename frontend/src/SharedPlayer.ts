@@ -141,7 +141,8 @@ export async function borrowPlayer(
       plugins: [DefaultPlugin()],
       scenes: [Description],
       experimentalFeatures: true,
-    } as Project;
+      variables: {location_1: {x: 0, y: 0}, location_2: {x: 0, y: 0}},
+    } as unknown as Project;
     ProjectInstance.meta = new ProjectMetadata(ProjectInstance);
     ProjectInstance.meta.shared.size.set(960);
 

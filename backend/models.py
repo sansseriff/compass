@@ -1,31 +1,42 @@
 from pydantic import BaseModel, Field
 from typing import Literal
+from pydantic.json_schema import SkipJsonSchema
+from enum import Enum
 
 
 # class Vector(BaseModel):
 #     x: float
 #     y: float
 
+class PortEnum(str, Enum):
+    input = "portInput"
+    output = "portOutput"
+    left = "portLeft"
+    right = "portRight"
+
+
+
+
+class C(BaseModel):
+    obj_id: str = Field(..., description="id of existing object. Like box1, fiber2, circle1, etc.")
+    port: PortEnum = Field(..., description="match name of port on object.")
+
 
 class InterfaceFiber(BaseModel):
-    t: Literal["FiberInterface"] = "FiberInterface"
-    name: Literal["fiber_interface"] = "fiber_interface"
-    id: str = Field(..., description="a unique id for the interface. Like fiber_interface1, fiber_interface2, etc.")
-    input_id: str = Field(..., description="the id of the node where the fiber starts")
-    output_id: str = Field(..., description="the id of the node where the fiber ends")
-
+    t: Literal["InterfaceFiber"] = "InterfaceFiber"
+    input: C
+    output: C
 
 
 class SuperNode:
     names: list[str] = []
     def __init__(self):
         pass
-    def model(self) -> type[BaseModel] | None:
-        return None
-    def add_interface(self) -> type[BaseModel] | None:
+    def model(self) -> list[type[BaseModel]]:
+        return []
+    def add_interface(self) -> list[type[BaseModel]]:
         # if one object requires an interface of a particular type, then should a check be added to make sure there's something to connect to it?
-        
-        return None
+        return []
 
 
 class Location(BaseModel):
@@ -38,8 +49,8 @@ class Circle(BaseModel):
     id: str = Field(..., description="a unique id for the circle. Like circle1, circle2, etc.")
     size: float = 50
     fill: str = "gray"
-    x: float = Field(..., description="x location. 0 is center, positive is right (max: 480), negative is left (min: -480)")
-    y: float = Field(..., description="y location. 0 is center, positive is up (max: 270), negative is down (min: -270)")
+    x: float
+    y: float
     lineWidth: float | None = None
 
 
@@ -47,8 +58,8 @@ class SuperCircle(SuperNode):
     names = ["circle", "oval", "ellipse", "ball", "ellipsoid", "sphere"]
     def __init__(self):
         pass
-    def model(self) -> type[BaseModel] | None:
-        return Circle
+    def model(self):
+        return [Circle]
 
 
 class Polygon(BaseModel):
@@ -58,8 +69,8 @@ class Polygon(BaseModel):
     id: str = Field(..., description="a unique id for the Polygon. Like poly1, poly2, etc.")
     fill: str = "gray"
     size: float = 50
-    x: float = Field(..., description="x location. 0 is center, positive is right (max: 480), negative is left (min: -480)")
-    y: float = Field(..., description="y location. 0 is center, positive is up (max: 270), negative is down (min: -270)")
+    x: float
+    y: float
     lineWidth: float | None = None
 
 
@@ -67,8 +78,8 @@ class SuperPolygon(SuperNode):
     names =  ["polygon", "triangle", "pentagon", "hexagon", "octagon", "nonagon", "decagon", "dodecagon"]
     def __init__(self):
         pass
-    def model(self) -> type[BaseModel] | None:
-        return Polygon
+    def model(self):
+        return [Polygon]
 
 
 class Rect(BaseModel):
@@ -78,8 +89,8 @@ class Rect(BaseModel):
     width: float = 50
     height: float = 50
     fill: str = "gray"
-    x: float = Field(..., description="x location. 0 is center, positive is right (max: 480), negative is left (min: -480)")
-    y: float = Field(..., description="y location. 0 is center, positive is up (max: 270), negative is down (min: -270)")
+    x: float
+    y: float
     lineWidth: float | None = None
 
 class SuperRect(SuperNode):
@@ -87,32 +98,36 @@ class SuperRect(SuperNode):
     def __init__(self):
         pass
     def model(self):
-        return Rect
+        return [Rect]
 
 
 class Box(BaseModel):
     t: Literal["Box"] = "Box"
+    id: str = Field(..., description="a unique id for the Box object. Like box1, box2, etc.")
     name: Literal["box", "object"] = "box"
-    id: str = Field(..., description="a unique id for the Box. Like box1, box2, etc.")
-    fiber_in_interface_id: str | None = Field(None, description="the id of this node's fiber input")
-    fiber_out_interface_id: str | None = Field(None, description="the id of this node's fiber output")
-    rect_props: Rect
+    portInput: Literal["portInput"] = "portInput"
+    portOutput: Literal["portOutput"] = "portOutput"
+    width: float = 50
+    height: float = 50
+    x: float
+    y: float
+    fill: str = "gray"
 
 class SuperBox(SuperNode):
     names = ["box", "object"]
     def __init__(self):
         pass
     def model(self):
-        return Box
+        return [Box, Fiber]
     def add_interface(self):
-        return InterfaceFiber
+        return [InterfaceFiber]
     
 class Fiber(BaseModel):
     t: Literal["Fiber"] = "Fiber"
     name: Literal["fiber", "cable", "wire"] = "fiber"
-    id: str = Field(..., description="a unique id for the Fiber. Like fiber1, fiber2, etc.")
-    start_id: str = Field(..., description="the id of this node's fiber input")
-    end_id: str = Field(..., description="the id of this node's fiber output")
+    id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
+    portInput: Literal["portInput"] = "portInput"
+    portOutput: Literal["portOutput"] = "portOutput"
     lineWidth: float | None = None
 
 class SuperFiber(SuperNode):
@@ -120,9 +135,9 @@ class SuperFiber(SuperNode):
     def __init__(self):
         pass
     def model(self):
-        return Fiber
+        return [Fiber]
     def add_interface(self):
-        return InterfaceFiber
+        return [InterfaceFiber]
 
 
 

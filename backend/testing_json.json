@@ -1,0 +1,60 @@
+{
+    "objects": [
+        {
+            "t": "Box",
+            "id": "box1",
+            "name": "box",
+            "portInput": "portInput",
+            "portOutput": "portOutput",
+            "width": 50.0,
+            "height": 50.0,
+            "x": -240.0,
+            "y": 240.0,
+            "fill": "gray"
+        },
+        {
+            "t": "Box",
+            "id": "box2",
+            "name": "box",
+            "portInput": "portInput",
+            "portOutput": "portOutput",
+            "width": 50.0,
+            "height": 50.0,
+            "x": 240.0,
+            "y": 240.0,
+            "fill": "gray"
+        },
+        {
+            "t": "Fiber",
+            "name": "fiber",
+            "id": "fiber1",
+            "portInput": "portInput",
+            "portOutput": "portOutput",
+            "lineWidth": null
+        }
+    ],
+    "interfaces": [
+        {
+            "t": "InterfaceFiber",
+            "input": {
+                "obj_id": "box1",
+                "port": "portOutput"
+            },
+            "output": {
+                "obj_id": "fiber1",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "input": {
+                "obj_id": "fiber1",
+                "port": "portOutput"
+            },
+            "output": {
+                "obj_id": "box2",
+                "port": "portInput"
+            }
+        }
+    ]
+}
