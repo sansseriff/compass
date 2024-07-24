@@ -42,7 +42,7 @@ export function updatePlayer(description: typeof Description) {
     }
   }
 
-export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | null, width: number) {
+export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | null, width: number, variables:any) {
   if (StageInstance && (StageInstance.finalBuffer.parentElement === previewRef)) {
     // enter here for player resize or scene change. These ops do not require a whole new player
 
@@ -95,6 +95,7 @@ export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | nu
     plugins: [DefaultPlugin()],
     scenes: [Description],
     experimentalFeatures: true,
+    variables: variables,
   } as Project;
 
   ProjectInstance.meta = new ProjectMetadata(ProjectInstance);

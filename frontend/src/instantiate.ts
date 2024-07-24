@@ -26,11 +26,11 @@ function createObject(data: any): Node | null {
   const { t, name, ...cleanedData } = data;
   const ctor = classRegistry[t];
 
-  if (cleanedData.hasOwnProperty('y')) {
+  if (cleanedData.hasOwnProperty("y")) {
     cleanedData.y = -cleanedData.y;
   }
 
-  console.log("this is cleaned data", cleanedData);
+  // console.log("this is cleaned data", cleanedData);
 
   if (ctor) {
     return new ctor(cleanedData);
@@ -39,29 +39,31 @@ function createObject(data: any): Node | null {
   }
 }
 
-
 export function createSceneFromText(
-  jsonData: ReturnType,
+  jsonData: ReturnType
+): (
   scale_factor: number
-) {
+) => FullSceneDescription<ThreadGeneratorFactory<View2D>> {
 
-  const Description = makeScene2D(function* (view) {
+  const scalableScene = (scale_factor: number) => {
+    const Description = makeScene2D(function* (view) {
+      const nodes = jsonData.objects.map((data) => {
+        const obj = createObject(data);
+        return obj;
+      });
 
-    const nodes = jsonData.objects.map((data) => {
-      const obj = createObject(data);
+      const top_node = new Node({
+        x: 0,
+        y: 0,
+        children: nodes,
+        scale: [scale_factor, scale_factor],
+      });
 
-      return obj;
+      view.add(top_node);
     });
 
-    const top_node = new Node({
-      x: 0,
-      y: 0,
-      children: nodes,
-      scale: [scale_factor, scale_factor],
-    });
+    return Description as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
+  };
 
-    view.add(top_node);
-  });
-
-  return Description as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
+  return scalableScene;
 }

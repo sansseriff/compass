@@ -49,9 +49,11 @@ class Circle(BaseModel):
     id: str = Field(..., description="a unique id for the circle. Like circle1, circle2, etc.")
     size: float = 50
     fill: str = "gray"
+    stroke: str = "gray"
+    lineWidth: float = 0
     x: float
     y: float
-    lineWidth: float | None = None
+    
 
 
 class SuperCircle(SuperNode):
@@ -68,10 +70,11 @@ class Polygon(BaseModel):
     sides: int = Field(..., description="number of polygon sides. 3 is triangle, 5 is pentagon, etc.")
     id: str = Field(..., description="a unique id for the Polygon. Like poly1, poly2, etc.")
     fill: str = "gray"
+    stroke: str = "gray"
     size: float = 50
     x: float
     y: float
-    lineWidth: float | None = None
+    lineWidth: float = 0
 
 
 class SuperPolygon(SuperNode):
@@ -89,9 +92,10 @@ class Rect(BaseModel):
     width: float = 50
     height: float = 50
     fill: str = "gray"
+    stroke: str = "gray"
     x: float
     y: float
-    lineWidth: float | None = None
+    lineWidth: float = 0
 
 class SuperRect(SuperNode):
     names = ["rect", "square", "rectangle"]

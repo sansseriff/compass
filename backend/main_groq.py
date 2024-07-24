@@ -91,10 +91,10 @@ def text_to_search(msg: Message):
     completion = SearchTerms(search_terms=[])
 
     try:
-        completion: SearchTerms = client_groq.chat.completions.create(
-            # model="gpt-4-turbo",
+        completion: SearchTerms = client_openai.chat.completions.create(
+            model="gpt-4o-mini",
             # model="llama-3.1-70b-versatile",
-            model="llama-3.1-8b-instant",
+            # model="llama-3.1-8b-instant",
             # model="mixtral-8x7b-32768",
             messages=[
                 {
