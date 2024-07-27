@@ -4,7 +4,7 @@
     FullSceneDescription,
     ThreadGeneratorFactory,
   } from "@motion-canvas/core";
-  import { Circle, View2D, Rect, Line, Node } from "@motion-canvas/2d";
+  import { Circle, View2D, Rect, Line, Node, Spline, Knot } from "@motion-canvas/2d";
   import PreloadingIndicator from "./PreloadingIndicator.svelte";
 
   // // originally loaded client side
@@ -18,6 +18,8 @@
     createRef,
     all,
     useScene,
+    createSignal,
+    Vector2,
   } from "@motion-canvas/core";
 
   import { makeScene2D, Code, LezerHighlighter } from "@motion-canvas/2d";
@@ -29,6 +31,8 @@
   import { scale } from "svelte/transition";
 
   import { createSceneFromText } from "./instantiate";
+
+  import { Box } from "./nodes/Box";
 
   let loading = $state(false);
   let time_scalar = $state(1);
@@ -80,30 +84,62 @@
   
   const scalableScene = (scale_factor: number) => {
     const Description = makeScene2D(function* (view) {
-            const circle = new Circle({
-        x: -100,
+      // const circle = new Circle({
+      //   x: -100,
+      //   y: 0,
+      //   width: 100,
+      //   height: 100,
+      //   // fill: useScene().variables.get('circleFill', 'blue')
+      //   fill: "#e13238"
+      // });
+      // const offset = new Vector2(10, 20); // Define the offset
+
+
+      // const loc_1 = Vector2.createSignal(new Vector2(-100,0));
+      // const loc_2 = Vector2.createSignal(new Vector2(100,0));
+
+      const box = new Box({
+        x: 100,
         y: 0,
         width: 100,
         height: 100,
-        // fill: useScene().variables.get('circleFill', 'blue')
-        fill: "#e13238"
+        scale:  1,
+        fill: "#e13238"});
+
+      // const sp = new Spline({lineWidth: 3, stroke: "orange", children: [
+      //           new Knot({position: () => rect.position().add(offset), startHandle: [-100, 0]}),
+      //           new Knot({position: loc_2, startHandle: [-100, 0]}),
+      //       ]})
+      const circle = new Circle({
+        position: () => box.portOutput(),
+        width: 30,
+        height: 30,
+        fill: "green",
+        scale: 1,
       });
 
-      const node = new Node({
-        x: 0,
-        y: 0,
-        children: [circle],
-        scale: [scale_factor, scale_factor],
-      });
+      // circle.position(() => box.portOutput())
 
+
+      // const node = new Node({
+      //   x: 0,
+      //   y: 0,
+      //   // children: [circle],
+      //   children: [box, circle],
+      //   scale: [scale_factor, scale_factor],
+      // });
+
+      
       // console.log("this is a circle: ", circle);
 
-      view.add(node);
+      view.add([box, circle]);
       
-      yield* all(
-        circle.position.x(100, 1).to(-100, 1),
-        circle.fill("#e6a700", 1).to("#e13238", 1)
-      );
+      // yield* all(
+        // circle.position.x(100, 1).to(-100, 1),
+        // circle.fill("#e6a700", 1).to("#e13238", 1)
+
+        yield * box.position(new Vector2(-100,0), 1).to(new Vector2(100, 0), 1)
+      // );
     });
 
     return Description as FullSceneDescription<ThreadGeneratorFactory<View2D>>;

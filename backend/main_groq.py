@@ -91,10 +91,13 @@ def text_to_search(msg: Message):
     completion = SearchTerms(search_terms=[])
 
     try:
-        completion: SearchTerms = client_openai.chat.completions.create(
-            model="gpt-4o-mini",
+        # completion: SearchTerms = client_openai.chat.completions.create(
+        completion: SearchTerms = client_groq.chat.completions.create(
+            # model="gpt-4o-mini",
             # model="llama-3.1-70b-versatile",
             # model="llama-3.1-8b-instant",
+            # model="llama3-groq-8b-8192-tool-use-preview",
+            model="llama3-groq-70b-8192-tool-use-preview",
             # model="mixtral-8x7b-32768",
             messages=[
                 {
@@ -130,58 +133,61 @@ def search_search(s: SearchTerms):
     matched_objects: list[type[BaseModel]] = []
     matched_interfaces: list[type[BaseModel]] = []
 
+    # Convert search terms and synonyms to lowercase for case-insensitive comparison
+    search_terms_lower = [term.lower() for term in s.search_terms]
+
+    print("starting search terms: ", search_terms_lower)
+    for term in s.search_terms:
+        term_lower = term.lower()
+        search_terms_lower.append(term_lower)
+        # Split the term by spaces and add the last word if it's not the only word
+        words = term.split()
+        if len(words) > 1:
+            search_terms_lower.append(words[-1])
+
+    print("NEXT search terms: ", search_terms_lower)
+
+    search_terms_lower_singular_1 = [f"{term[:-1]}" for term in search_terms_lower if term[-1] == "s"]
+    search_terms_lower_singular_2 = [f"{term[:-2]}" for term in search_terms_lower if term[-2:] == "es"]
+    search_terms_lower.extend(search_terms_lower_singular_1)
+    search_terms_lower.extend(search_terms_lower_singular_2)
+
+    print("FINAL search terms: ", search_terms_lower)
+
     for name, obj in inspect.getmembers(models_module, inspect.isclass):
-        # Ensure the class is defined in the models_module
-        # if inspect.getmodule(obj) != models_module:
-        #     continue
-
-        # # Check if the class has a 'name' attribute and it is a Literal
-        # hints = get_type_hints(obj)
-        # if 'name' not in hints or get_origin(hints['name']) != Literal:
-        #     continue
-
-        # # Extract the possible values from the Literal type hint for 'name'
-        # synonyms = hints['name'].__args__
-        # logger.info("synonyms: %s", synonyms)
-
         # check if class has a "names" attribute
         if not hasattr(obj, "names"):
             # print("continued 1")
             continue
 
-        synonyms = obj.names
+        synonyms: list[str] = obj.names
 
         obj = cast(type[SuperNode], obj)
 
-        obj_instance = obj()
-
-        # Convert search terms and synonyms to lowercase for case-insensitive comparison
-        search_terms_lower = [term.lower() for term in s.search_terms]
-
-
-        # Modified code to include both the original terms and the last word of each term if it contains spaces
-        search_terms_lower: list[str] = []
-        for term in s.search_terms:
-            term_lower = term.lower()
-            search_terms_lower.append(term_lower)
-            # Split the term by spaces and add the last word if it's not the only word
-            words = term_lower.split()
-            if len(words) > 1:
-                search_terms_lower.append(words[-1])
-
-        # logger.info("expanded search terms: %s", search_terms_lower)
-
         synonyms_lower = [syn.lower() for syn in synonyms]
         synonyms_plural_lower = [f"{syn}s" for syn in synonyms_lower]
+        synonyms_singular_lower = [f"{syn[:-1]}" for syn in synonyms_lower if syn[-1] == "s"]
+        synonyms_singular_lower_es = [f"{syn[:-2]}" for syn in synonyms_lower if syn[-2:] == "es"]
+
+
         synonyms_lower.extend(synonyms_plural_lower)
+        synonyms_lower.extend(synonyms_singular_lower)
+        synonyms_lower.extend(synonyms_singular_lower_es)
+        synonyms_lower.append(name.lower())
+        # print("synonyms_lower: ", synonyms_lower, "and search_terms_lower: ", search_terms_lower)
+
 
         # Check if any of the search terms match the class name or any of the synonyms
-        if any(term in name.lower() or term in synonyms_lower for term in search_terms_lower):
+        if any(term in synonyms_lower for term in search_terms_lower):
 
+            obj_instance = obj()
             
             matched_objects.extend(obj_instance.model())
 
             matched_interfaces.extend(obj_instance.add_interface())
+
+    print("matched_objects: ", matched_objects)
+    print("matched_interfaces: ", matched_interfaces)
 
     return (matched_objects, matched_interfaces)
 
@@ -194,6 +200,9 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
     # if len(matched_interfaces) == 0:
     #     matched_interfaces.append(Any)
+
+    if len(matched_objects) == 0:
+        return None
     
     GenericObject = Annotated[Union[*matched_objects], Field(discriminator='t')] # type: ignore
     
@@ -218,7 +227,9 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
     # completion = ReturnType(scene=[Circle(name="circle", size=30, fill="green", position=Vector(x=0, y=0))])
 
-    prompt = f"""Build a scene description. 
+    prompt = f"""Build a scene description. Interfaces MUST be used between every object-object connection.
+
+
     Common object parameters:
     x: -480(left) > x < 480(right). 0 is center of screen.
     y: -270(bottom) > y < 270(top). 0 is center of screen.
@@ -227,7 +238,9 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
     try:
         completion = client_openai.chat.completions.create(
+        # completion = client_groq.chat.completions.create(
             model="gpt-4o-mini",
+            # model="llama3-groq-70b-8192-tool-use-preview",
             # model="llama-3.1-70b-versatile",
             # model="llama-3.1-8b-instant",
             # model="mixtral-8x7b-32768",
@@ -239,7 +252,7 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
             ],
             response_model=ReturnType,
         )
-        print("completion: ", completion)
+        print("completion: ", completion.model_dump_json())
         # print("completion raw: ", completion._raw_response)
 
         # Its now a dict, no need to worry about json loading so many times

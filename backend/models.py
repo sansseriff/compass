@@ -8,24 +8,29 @@ from enum import Enum
 #     x: float
 #     y: float
 
-class PortEnum(str, Enum):
-    input = "portInput"
-    output = "portOutput"
-    left = "portLeft"
-    right = "portRight"
+# class PortEnum(Enum):
+#     INPUT = 1
+#     OUTPUT = 2
+#     LEFT = 3
+#     RIGHT = 4
+#     OTHER = 5
 
 
 
 
-class C(BaseModel):
+class ObjectPointer(BaseModel):
     obj_id: str = Field(..., description="id of existing object. Like box1, fiber2, circle1, etc.")
-    port: PortEnum = Field(..., description="match name of port on object.")
+    port: Literal["portInput", "portOutput", "portLeft", "portRight"]
+
+class FiberPointer(BaseModel):
+    fiber_id: str = Field(..., description="id of existing fiber object. Like fiber1, fiber2, etc.")
+    port: Literal["portInput", "portOutput"]
 
 
 class InterfaceFiber(BaseModel):
-    t: Literal["InterfaceFiber"] = "InterfaceFiber"
-    input: C = Field(..., description="either input or output MUST be of type Fiber")
-    output: C = Field(..., description="either input or output MUST be of type Fiber")
+    t: Literal["InterfaceFiber"] = Field("InterfaceFiber", description="connects fiber to non-fiber object")
+    donator_obj: ObjectPointer = Field(..., description="should ONLY point to a non-fiber object")
+    fiber: FiberPointer = Field(..., description="should ONLY point to a fiber object. fiber1, fiber2, etc.")
 
 
 class SuperNode:
@@ -109,8 +114,8 @@ class Box(BaseModel):
     t: Literal["Box"] = "Box"
     id: str = Field(..., description="a unique id for the Box object. Like box1, box2, etc.")
     name: Literal["box", "object"] = "box"
-    portInput: Literal["portInput"] = "portInput"
-    portOutput: Literal["portOutput"] = "portOutput"
+    portInput: Literal["donator"] = "donator"
+    portOutput: Literal["donator"] = "donator"
     width: float = 50
     height: float = 50
     x: float
@@ -130,9 +135,9 @@ class Fiber(BaseModel):
     t: Literal["Fiber"] = "Fiber"
     name: Literal["fiber", "cable", "wire"] = "fiber"
     id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
-    portInput: Literal["portInput"] = "portInput"
-    portOutput: Literal["portOutput"] = "portOutput"
-    lineWidth: float | None = None
+    portInput: Literal["acceptor"] = "acceptor"
+    portOutput: Literal["acceptor"] = "acceptor"
+    lineWidth: float = 2
 
 class SuperFiber(SuperNode):
     names = ["fiber", "cable", "wire"]

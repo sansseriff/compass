@@ -3,3 +3,23 @@ A red and green and purple triangle, all sitting above a long thin rectangle. Be
 
 
 A tan colored rectangle takes up the whole bottom half of the screen, like earth. A blue rectangle is in the upper half like sky. Put a yellow circle somewhere like the sun. 
+
+
+objects=[
+    Box(t='Box', id='box1', name='box', portInput='portInput', portOutput='portOutput', width=50, height=50, x=-150.0, y=0.0, fill='gray'), 
+    Box(t='Box', id='box2', name='box', portInput='portInput', portOutput='portOutput', width=50, height=50, x=150.0, y=0.0, fill='gray'), 
+    Box(t='Box', id='box3', name='box', portInput='portInput', portOutput='portOutput', width=50, height=50, x=0.0, y=0.0, fill='purple'), 
+    Fiber(t='Fiber', name='fiber', id='fiber1', portInput='portInput', portOutput='portOutput', lineWidth=2.0), 
+    Fiber(t='Fiber', name='fiber', id='fiber2', portInput='portInput', portOutput='portOutput', lineWidth=2.0)] 
+    
+    
+interfaces=[
+    
+    InterfaceFiber(t='InterfaceFiber', input=C(obj_id='box1', port=<PortEnum.output: 'portOutput'>), output=C(obj_id='fiber1', port=<PortEnum.input: 'portInput'>)), 
+    InterfaceFiber(t='InterfaceFiber', input=C(obj_id='fiber1', port=<PortEnum.output: 'portOutput'>), output=C(obj_id='box3', port=<PortEnum.input: 'portInput'>)), 
+    InterfaceFiber(t='InterfaceFiber', input=C(obj_id='box3', port=<PortEnum.output: 'portOutput'>), output=C(obj_id='fiber2', port=<PortEnum.input: 'portInput'>)), 
+    InterfaceFiber(t='InterfaceFiber', input=C(obj_id='fiber2', port=<PortEnum.output: 'portOutput'>), output=C(obj_id='box2', port=<PortEnum.input: 'portInput'>))]
+
+
+
+

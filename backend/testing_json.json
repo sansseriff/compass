@@ -4,56 +4,56 @@
             "t": "Box",
             "id": "box1",
             "name": "box",
-            "portInput": "portInput",
-            "portOutput": "portOutput",
+            "portInput": "donator",
+            "portOutput": "donator",
             "width": 50.0,
             "height": 50.0,
-            "x": -240.0,
-            "y": 240.0,
+            "x": -200.0,
+            "y": 0.0,
             "fill": "gray"
         },
         {
             "t": "Box",
             "id": "box2",
             "name": "box",
-            "portInput": "portInput",
-            "portOutput": "portOutput",
+            "portInput": "donator",
+            "portOutput": "donator",
             "width": 50.0,
             "height": 50.0,
-            "x": 240.0,
-            "y": 240.0,
+            "x": 200.0,
+            "y": 0.0,
             "fill": "gray"
         },
         {
             "t": "Fiber",
             "name": "fiber",
             "id": "fiber1",
-            "portInput": "portInput",
-            "portOutput": "portOutput",
-            "lineWidth": null
+            "portInput": "acceptor",
+            "portOutput": "acceptor",
+            "lineWidth": 2.0
         }
     ],
     "interfaces": [
         {
             "t": "InterfaceFiber",
-            "input": {
+            "donator_obj": {
                 "obj_id": "box1",
                 "port": "portOutput"
             },
-            "output": {
-                "obj_id": "fiber1",
+            "fiber": {
+                "fiber_id": "fiber1",
                 "port": "portInput"
             }
         },
         {
             "t": "InterfaceFiber",
-            "input": {
-                "obj_id": "fiber1",
-                "port": "portOutput"
-            },
-            "output": {
+            "donator_obj": {
                 "obj_id": "box2",
                 "port": "portInput"
+            },
+            "fiber": {
+                "fiber_id": "fiber1",
+                "port": "portOutput"
             }
         }
     ]
