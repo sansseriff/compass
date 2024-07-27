@@ -1,5 +1,5 @@
 import type { NodeProps, RectProps } from "@motion-canvas/2d";
-import { Rect, Node, Spline, Knot } from "@motion-canvas/2d";
+import { Rect, Node, Spline, Knot, Circle } from "@motion-canvas/2d";
 
 import type {
   SignalValue,
@@ -45,31 +45,51 @@ export class Box extends Node {
   @signal()
   public declare readonly fill: SimpleSignal<PossibleColor>;
 
+  private rect: Rect;
+  private port_1: Circle;
+  private port_2: Circle;
+
   public constructor(props?: BoxProps) {
     super({
       ...props,
     });
 
+
+    this.port_1 = new Circle({x: 10, y: 10, fill:"#363636", width: 10, height: 10});
+    this.port_2 = new Circle({x: -10, y: 10, fill:"#363636", width: 10, height: 10});
+    this.rect = new Rect({
+      smoothCorners: true,
+      radius: 5,
+      x: 0,
+      y: 0,
+      shadowColor: {a: 0.25, r: 0, g: 0, b: 0},
+      stroke: "black",
+      lineWidth: 2,
+      shadowOffset: new Vector2(-2, 2),
+      shadowBlur: 5,
+      width: this.width,
+      height: this.height,
+      children: [this.port_1, this.port_2],
+      // x: this.x,
+      // y: this.y,
+      // width: this.width,
+      // height: this.height,
+      fill: this.fill,
+    })
+
+
     this.add(
-      new Rect({
-        x: 0,
-        y: 0,
-        width: this.width,
-        height: this.height,
-        // x: this.x,
-        // y: this.y,
-        // width: this.width,
-        // height: this.height,
-        fill: this.fill,
-      })
+      this.rect
     );
+
+    console.log("color value: ", this.fill().valueOf())
 
     // console.log("trying to calculate values to put in signal")
     // this.portInput(new Vector2(100, 100));
     // console.log("singal updated")
     // console.log("updated signal: ", this.portInput())
 
-    this.portOutput = createSignal(() => this.position().add(new Vector2(20,20)));
-    this.portInput = createSignal(() => this.position().add(new Vector2(-20,20)));
+    this.portOutput = createSignal(() => this.port_1.absolutePosition());
+    this.portInput = createSignal(() => this.port_2.absolutePosition());
   }
 }

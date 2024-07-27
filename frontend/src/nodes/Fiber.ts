@@ -34,6 +34,10 @@ export class Fiber extends Node {
     // @signal() //??????????????????????????
     public declare readonly spline_props: SplineProps;
 
+    private knot_1: Knot;
+    private knot_2: Knot;
+    private sp: Spline;
+
     public constructor(props?: FiberProps) {
         super({
             ...props,
@@ -41,12 +45,22 @@ export class Fiber extends Node {
 
         console.log("adding spline details")
         console.log("and this is the port input signal: ", this.portInput())
+
+        this.knot_2 = new Knot({startHandle: [-100, 0]})
+        this.knot_1 = new Knot({startHandle: [-100, 0]})
+        this.sp = new Spline({lineWidth: this.lineWidth, stroke: "orange", shadowColor: {a: 0.25, r: 0, g: 0, b: 0}, shadowBlur: 2,
+            
+            children: [this.knot_1, this.knot_2]})
+
+        this.knot_1.absolutePosition(() => this.portInput());
+        this.knot_2.absolutePosition(() => this.portOutput());
+
         this.add(
-            new Spline({lineWidth: this.lineWidth, stroke: "orange", children: [
-                new Knot({position: () => this.portInput(), startHandle: [-100, 0]}),
-                new Knot({position: () => this.portOutput(), startHandle: [-100, 0]}),
-            ]})
+            this.sp
         )
+
+        // this.absolutePosition(() => this.portInput());
+        // this.absolutePosition(() => this.portOutput());
     }
 }
 

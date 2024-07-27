@@ -239,6 +239,7 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     try:
         completion = client_openai.chat.completions.create(
         # completion = client_groq.chat.completions.create(
+            # model="gpt-4o",
             model="gpt-4o-mini",
             # model="llama3-groq-70b-8192-tool-use-preview",
             # model="llama-3.1-70b-versatile",

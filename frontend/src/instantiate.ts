@@ -104,7 +104,6 @@ export function createSceneFromText(
             const donator_store = { index: 0, port: "" };
             const acceptor_store = { index: 0, port: "" };
 
-
             // find the donator
             for (const [
               node_idx,
@@ -132,12 +131,21 @@ export function createSceneFromText(
                 acceptor_store.port = node_interface.fiber.port;
               }
             }
-            console.log("this is the donator store: ", donator_store, nodes[donator_store.index]);
-            console.log("this is the acceptor store: ", acceptor_store, nodes[acceptor_store.index]);
+            console.log(
+              "this is the donator store: ",
+              donator_store,
+              nodes[donator_store.index]
+            );
+            console.log(
+              "this is the acceptor store: ",
+              acceptor_store,
+              nodes[acceptor_store.index]
+            );
 
             // give the acceptor the signal from the donator
-            (nodes[acceptor_store.index] as any)[acceptor_store.port] = (nodes[donator_store.index] as any)[donator_store.port];
-
+            (nodes[acceptor_store.index] as any)[acceptor_store.port] = (
+              nodes[donator_store.index] as any
+            )[donator_store.port];
           }
         }
 
@@ -185,12 +193,13 @@ export function createSceneFromText(
         view.add(top_node);
         console.log(nodes);
 
-        yield * nodes[0].position(new Vector2(0,100),2).to(new Vector2(0,-100),2);
+        yield* all(
+          nodes[0].position(new Vector2(0, 100), 2).to(new Vector2(0, -100), 2),
+          nodes[0].rotation(180, 1).to(-180, 1)
+        );
       } catch (e) {
         console.log("error: ", e);
       }
-
-      
 
       // yield* nodes[0].portOutput({ x: 100, y: 100 }, 2).to({ x: 200, y: 200 }, 2);
     });
