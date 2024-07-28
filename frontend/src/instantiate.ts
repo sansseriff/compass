@@ -226,10 +226,10 @@ export function createSceneFromText(
         console.log(nodes);
 
         yield* all(
-          nodes[0].position(nodes[0]?.position().add(new Vector2(0,50)), 2).to(nodes[0]?.position().add(new Vector2(0,-50)), 2).to(nodes[0]?.position().add(new Vector2(0,0)), 2),
-          nodes[0].rotation(20, 1).to(-20, 1).to(0, 1),
-          nodes[1].position(nodes[1]?.position().add(new Vector2(0,50)), 2).to(nodes[1]?.position().add(new Vector2(0,-50)), 2).to(nodes[1]?.position().add(new Vector2(0,0)), 2),
-          nodes[1].rotation(20, 1).to(-20, 1).to(0, 1),
+          // nodes[0].position(nodes[0]?.position().add(new Vector2(0,50)), 2).to(nodes[0]?.position().add(new Vector2(0,-50)), 2).to(nodes[0]?.position().add(new Vector2(0,0)), 2),
+          nodes[0].rotation(10, .2).to(-10, .2).to(0, .2),
+          // nodes[1].position(nodes[1]?.position().add(new Vector2(0,50)), 2).to(nodes[1]?.position().add(new Vector2(0,-50)), 2).to(nodes[1]?.position().add(new Vector2(0,0)), 2),
+          nodes[1].rotation(10, .2).to(-10, .2).to(0, .2),
         );
       } catch (e) {
         console.log("error: ", e);

@@ -30,19 +30,23 @@ from typing import Any
 #     port: Literal["portInput", "portOutput"]
 
 
+config_setter = False
+
+
 # portOutput of box1 connects to portInput of 
 class Port(BaseModel):
     obj_id: str = Field(..., description="id of existing object . Like box1, fiber2, circle1, etc.")
-    port: Literal["portInput", "portOutput", "portLeft", "portRight"]
+    port: Literal["portInput", "portOutput"]
 
 class InterfaceFiber(BaseModel):
     t: Literal["InterfaceFiber"] = Field("InterfaceFiber")
     from_: Port
     to: Port
 
-    model_config = ConfigDict(json_schema_extra={
-        # 't': 'InterfaceFiber',
-        'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object"})
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': 'InterfaceFiber',
+            'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object"})
 
 
 class SuperNode:
@@ -147,9 +151,12 @@ class Box(BaseModel):
     portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=False)
     portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=True)
 
-    model_config = ConfigDict(json_schema_extra={
-        # 't': 'Box', 
-        'available_ports': ["portInput", "portOutput"]})
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': 'Box', 
+            'available_ports': ["portInput", "portOutput"]})
+    if not config_setter:
+        available_ports: Literal["portInput, portOutput"]
 
     @classmethod
     def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
@@ -180,10 +187,13 @@ class Fiber(BaseModel):
     portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=False)
     portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=True)
 
-    model_config = ConfigDict(json_schema_extra={
-        # 't': "Fiber", 
-        # 'notes': "Fiber is an OBJECT. Fiber is NOT an edge-like or interface-like entity. ",
-        'available_ports': ["portInput", "portOutput"]})
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': "Fiber", 
+            # 'notes': "Fiber is an OBJECT. Fiber is NOT an edge-like or interface-like entity. ",
+            'available_ports': ["portInput", "portOutput"]})
+    if not config_setter:
+        ports_available: Literal["portInput, portOutput"]
 
     @classmethod
     def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:

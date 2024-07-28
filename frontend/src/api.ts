@@ -33,3 +33,11 @@ interface Message {
 export function getScene(message: string): Promise<ReturnType> {
     return fetchWithConfig("/scene", "POST", { message });
 }
+
+export async function setSceneModel(modelStr: string): Promise<any> {
+    return fetchWithConfig('/set-scene-model', 'POST', { value: modelStr });
+  }
+  
+  export async function setDecoderModel(modelStr: string): Promise<any> {
+    return fetchWithConfig('/set-decoder-model', 'POST', { value: modelStr });
+  }

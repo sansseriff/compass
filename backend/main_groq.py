@@ -6,6 +6,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+
+from openai.types.chat import ChatCompletionMessageToolCall
+from openai.types.chat import ChatCompletion
+
+
 from typing_extensions import Annotated
 from typing import Literal, Union, Type
 
@@ -19,6 +24,8 @@ from pydantic import BaseModel, create_model
 
 from openai import OpenAI
 import instructor
+
+from instructor import Instructor
 
 from dotenv import load_dotenv  # Import load_dotenv
 # Load environment variables from .env file
@@ -35,12 +42,25 @@ import importlib
 import inspect
 from typing import get_type_hints, Literal, get_origin
 
+import json
+from dataclasses import dataclass
+
 
 from fastapi.middleware.cors import CORSMiddleware
 
 
+@dataclass
+class DecoderModel:
+    client: Instructor
+    model: str
 
-# from typing import get_origin, Literal
+@dataclass
+class SceneModel:
+    client: Instructor
+    model: str
+
+
+
 
 
 load_dotenv()
@@ -63,6 +83,11 @@ app.add_middleware(
 
 client_groq = instructor.from_groq(Groq(), mode=instructor.Mode.TOOLS)
 client_openai = instructor.from_openai(OpenAI())
+
+
+decoder_model = DecoderModel(client=client_groq, model="llama3-groq-70b-8192-tool-use-preview")
+scene_model = SceneModel(client=client_openai, model="gpt-4o-mini")
+
 
 class SearchTerms(BaseModel):
     search_terms: list[str]
@@ -91,14 +116,9 @@ def text_to_search(msg: Message):
     completion = SearchTerms(search_terms=[])
 
     try:
-        # completion: SearchTerms = client_openai.chat.completions.create(
-        completion: SearchTerms = client_groq.chat.completions.create(
-            # model="gpt-4o-mini",
-            # model="llama-3.1-70b-versatile",
-            # model="llama-3.1-8b-instant",
-            # model="llama3-groq-8b-8192-tool-use-preview",
-            model="llama3-groq-70b-8192-tool-use-preview",
-            # model="mixtral-8x7b-32768",
+        print("USING DECODER MODEL: ", decoder_model.model)
+        completion: SearchTerms = decoder_model.client.chat.completions.create(
+            model=decoder_model.model,
             messages=[
                 {
                     "role": "user",
@@ -244,14 +264,17 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     
     The scene description: {text}"""
 
+    print("USING SCENE MODEL: ", scene_model.model)
+
     try:
-        completion = client_openai.chat.completions.create(
-        # completion = client_groq.chat.completions.create(
+        user, completion = scene_model.client.chat.completions.create_with_completion(
+            model=scene_model.model,
             # model="gpt-4o",
-            model="gpt-4o-mini",
+            # model="gpt-4o-mini",
             # model="llama3-groq-70b-8192-tool-use-preview",
             # model="llama-3.1-70b-versatile",
             # model="llama-3.1-8b-instant",
+            # model="llama3-groq-8b-8192-tool-use-preview",
             # model="mixtral-8x7b-32768",
             messages=[
                 {
@@ -261,7 +284,39 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
             ],
             response_model=ReturnType,
         )
-        print("completion: ", completion.model_dump_json())
+        # print("completion: ", completion.model_dump_json())
+
+        # print("completion: ", completion)
+
+        # print("choices 0, tool calls", completion.choices[0])
+        # print("choices 0, tool calls", completion.choices[0].message.tool_calls)
+
+        completion = cast(ChatCompletion, completion)
+
+        # completion.choices[0].message.tool_calls[0].function.arguments
+
+        completion_string = cast(str, completion.choices[0].message.tool_calls[0].function.arguments)
+
+        # Parse the JSON string to a Python dictionary
+        parsed_completion_string = json.loads(completion_string)
+
+        # Pretty-print the raw completion string
+        pretty_raw_json = json.dumps(parsed_completion_string, indent=4)
+        with open("completion_raw.json", "w") as f:
+            f.write(pretty_raw_json)
+
+        completion_model = ReturnType.model_validate_json(completion_string)
+
+        print("completion model: ", completion_model)
+
+        # Pretty-print the completion model
+        pretty_json = json.dumps(json.loads(completion_model.model_dump_json()), indent=4)
+        with open("completion.json", "w") as f:
+            f.write(pretty_json)
+
+        
+
+
         # print("completion raw: ", completion._raw_response)
 
         # Its now a dict, no need to worry about json loading so many times
@@ -282,7 +337,67 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
     # print(completion.model_dump_json())
 
-    return completion
+    # return completion
+    return completion_model
+
+
+
+class ModelRequest(BaseModel):
+    value: str
+
+
+@app.post("/set-scene-model")
+def set_scene_model(request: ModelRequest):
+    model_str = request.value
+
+    if model_str == "gpt-4o":
+        scene_model.model = model_str
+        scene_model.client = client_openai
+
+    elif model_str == "gpt-4o-mini":
+        scene_model.model = model_str
+        scene_model.client = client_openai
+
+    elif model_str == "llama3-groq-70b-8192-tool-use-preview":
+        scene_model.model = model_str
+        scene_model.client = client_groq
+
+    elif model_str == "llama3-groq-8b-8192-tool-use-preview":
+        scene_model.model = model_str
+        scene_model.client = client_groq
+
+    elif model_str == "mixtral-8x7b-32768":
+        scene_model.model = model_str
+        scene_model.client = client_groq
+
+
+@app.post("/set-decoder-model")
+def set_decoder_model(request: ModelRequest):
+    model_str = request.value
+
+    print("received model_str: ", model_str)
+
+    if model_str == "gpt-4o":
+        decoder_model.model = model_str
+        decoder_model.client = client_openai
+
+    elif model_str == "gpt-4o-mini":
+        decoder_model.model = model_str
+        decoder_model.client = client_openai
+
+    elif model_str == "llama3-groq-70b-8192-tool-use-preview":
+        decoder_model.model = model_str
+        decoder_model.client = client_groq
+
+    elif model_str == "llama3-groq-8b-8192-tool-use-preview":
+        decoder_model.model = model_str
+        decoder_model.client = client_groq
+
+    elif model_str == "mixtral-8x7b-32768":
+        decoder_model.model = model_str
+        decoder_model.client = client_groq
+
+    
 
     
 

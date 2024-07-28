@@ -94,7 +94,7 @@ export class Box extends Node {
       this.rect
     );
 
-    console.log("color value: ", this.fill().valueOf())
+    // console.log("color value: ", this.fill().valueOf())
 
     // console.log("trying to calculate values to put in signal")
     // this.portInput(new Vector2(100, 100));

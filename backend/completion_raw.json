@@ -1,0 +1,88 @@
+{
+    "interfaces": [
+        {
+            "from_": {
+                "obj_id": "box1",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "fiber1",
+                "port": "portInput"
+            }
+        },
+        {
+            "from_": {
+                "obj_id": "fiber1",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "box2",
+                "port": "portInput"
+            }
+        },
+        {
+            "from_": {
+                "obj_id": "box2",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "fiber2",
+                "port": "portInput"
+            }
+        },
+        {
+            "from_": {
+                "obj_id": "fiber2",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "box3",
+                "port": "portInput"
+            }
+        }
+    ],
+    "objects": [
+        {
+            "t": "Box",
+            "id": "box1",
+            "x": -300,
+            "y": 0,
+            "width": 150,
+            "height": 75,
+            "fill": "gray",
+            "available_ports": "portInput, portOutput"
+        },
+        {
+            "t": "Box",
+            "id": "box2",
+            "x": 0,
+            "y": -150,
+            "width": 150,
+            "height": 75,
+            "fill": "red",
+            "available_ports": "portInput, portOutput"
+        },
+        {
+            "t": "Box",
+            "id": "box3",
+            "x": 300,
+            "y": 0,
+            "width": 150,
+            "height": 75,
+            "fill": "purple",
+            "available_ports": "portInput, portOutput"
+        },
+        {
+            "t": "Fiber",
+            "id": "fiber1",
+            "ports_available": "portInput, portOutput",
+            "lineWidth": 10
+        },
+        {
+            "t": "Fiber",
+            "id": "fiber2",
+            "ports_available": "portInput, portOutput",
+            "lineWidth": 10
+        }
+    ]
+}

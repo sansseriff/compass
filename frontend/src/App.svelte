@@ -4,8 +4,18 @@
     FullSceneDescription,
     ThreadGeneratorFactory,
   } from "@motion-canvas/core";
-  import { Circle, View2D, Rect, Line, Node, Spline, Knot } from "@motion-canvas/2d";
+  import {
+    Circle,
+    View2D,
+    Rect,
+    Line,
+    Node,
+    Spline,
+    Knot,
+  } from "@motion-canvas/2d";
   import PreloadingIndicator from "./PreloadingIndicator.svelte";
+
+  import { setSceneModel, setDecoderModel } from "./api";
 
   // // originally loaded client side
   import {
@@ -34,6 +44,8 @@
 
   import { Box } from "./nodes/Box";
 
+  import logo from './assets/logo.svg';
+
   let loading = $state(false);
   let time_scalar = $state(1);
 
@@ -46,7 +58,10 @@
 
   let currentSceneScalable;
 
-  let variables = {circleFill: 'red'}
+  let variables = { circleFill: "red" };
+
+
+  
 
   // function createInitialScene(scale_factor = 1) {
   //   const Description = makeScene2D(function* (view) {
@@ -79,105 +94,40 @@
   // }
 
   export function createInitialScalableScene(): (
-  scale_factor: number
-) => FullSceneDescription<ThreadGeneratorFactory<View2D>> {
-  
-  const scalableScene = (scale_factor: number) => {
-    const Description = makeScene2D(function* (view) {
-      // const circle = new Circle({
-      //   x: -100,
-      //   y: 0,
-      //   width: 100,
-      //   height: 100,
-      //   // fill: useScene().variables.get('circleFill', 'blue')
-      //   fill: "#e13238"
-      // });
-      // const offset = new Vector2(10, 20); // Define the offset
+    scale_factor: number
+  ) => FullSceneDescription<ThreadGeneratorFactory<View2D>> {
+    const scalableScene = (scale_factor: number) => {
+      const Description = makeScene2D(function* (view) {
+        const box = new Box({
+          x: 100,
+          y: 0,
+          width: 100,
+          height: 100,
+          scale: 1,
+          fill: "#e13238",
+        });
 
+        const circle = new Circle({
+          position: () => box.portOutput.position(),
+          width: 30,
+          height: 30,
+          fill: "green",
+          scale: 1,
+        });
 
-      // const loc_1 = Vector2.createSignal(new Vector2(-100,0));
-      // const loc_2 = Vector2.createSignal(new Vector2(100,0));
+        view.add([box, circle]);
 
-      const box = new Box({
-        x: 100,
-        y: 0,
-        width: 100,
-        height: 100,
-        scale:  1,
-        fill: "#e13238"});
-
-      // const sp = new Spline({lineWidth: 3, stroke: "orange", children: [
-      //           new Knot({position: () => rect.position().add(offset), startHandle: [-100, 0]}),
-      //           new Knot({position: loc_2, startHandle: [-100, 0]}),
-      //       ]})
-      const circle = new Circle({
-        position: () => box.portOutput(),
-        width: 30,
-        height: 30,
-        fill: "green",
-        scale: 1,
+        yield* box.position(new Vector2(-100, 0), 1).to(new Vector2(100, 0), 1);
+        // );
       });
 
-      // circle.position(() => box.portOutput())
+      return Description as FullSceneDescription<
+        ThreadGeneratorFactory<View2D>
+      >;
+    };
 
-
-      // const node = new Node({
-      //   x: 0,
-      //   y: 0,
-      //   // children: [circle],
-      //   children: [box, circle],
-      //   scale: [scale_factor, scale_factor],
-      // });
-
-      
-      // console.log("this is a circle: ", circle);
-
-      view.add([box, circle]);
-      
-      // yield* all(
-        // circle.position.x(100, 1).to(-100, 1),
-        // circle.fill("#e6a700", 1).to("#e13238", 1)
-
-        yield * box.position(new Vector2(-100,0), 1).to(new Vector2(100, 0), 1)
-      // );
-    });
-
-    return Description as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
-  };
-
-  return scalableScene;
-}
-
-  // function otherScene() {
-  //   const Description = makeScene2D(function* (view) {
-  //     // view.fill('#242424'); // set the background of this scene
-  //     // const circle = new Rect({
-  //     //   x: -100,
-  //     //   y: 0,
-  //     //   width: 100,
-  //     //   height: 100,
-  //     //   rotation: 180,
-  //     //   fill: "#000000",
-  //     //   // antialiased: false,
-  //     // });
-
-  //     const line = new Line({
-  //       endArrow: true,
-  //       arrowSize: 20,
-  //       // lineCap:"butt",
-  //       stroke: "424B54",
-  //       lineWidth: 20,
-  //       points: [
-  //         [450, 0],
-  //         [-150, 0],
-  //       ],
-  //     });
-
-  //     view.add(line);
-  //   }) as FullSceneDescription<ThreadGeneratorFactory<View2D>>;
-
-  //   return Description;
-  // }
+    return scalableScene;
+  }
 
   function init() {
     const size = document.body.clientWidth / 2;
@@ -191,15 +141,7 @@
     updatePlayer(currentSceneScalable(size / 960));
   }
 
-  // function swapScene() {
-  //   const scene = otherScene();
-  //   // player = borrowPlayer(previewRef, player, writingAreaWidth);
-  //   updatePlayer(scene);
-  // }
-
-  onMount(() => {
-    init();
-  });
+  
 
   let visualAreaWidth = $state(50); // Initial width in percentage
 
@@ -231,7 +173,6 @@
   function handleText(event) {
     inputText = event.target.value;
     if (event.shiftKey && event.key === "Enter") {
-      
       event.preventDefault(); // Prevent the default action to avoid a new line in the textarea
       console.log("Sending textarea content to server:", inputText);
       const wordCount = inputText.split(/\s+/).filter(Boolean).length;
@@ -250,16 +191,84 @@
     }
   }
 
-
   const colors = ["red", "green", "blue", "yellow", "purple", "orange"];
 
-  const initial_text = "A box connected to another box via fiber."
+  const initial_text = "A box connected to another box via fiber.";
+
+  let decoderModel = $state("llama3-groq-70b-8192-tool-use-preview");
+  let sceneModel = $state("gpt-4o-mini");
+
+  const modelOptions = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "llama3-groq-70b-8192-tool-use-preview",
+    "llama3-groq-8b-8192-tool-use-preview",
+    "mixtral-8x7b-32768",
+  ];
+
+  function handleSceneModelChange(event) {
+    sceneModel = event.target.value;
+    setSceneModel(sceneModel);
+  }
+
+  function handleDecoderModelChange(event) {
+    decoderModel = event.target.value;
+    console.log("decoderModel: ", decoderModel);
+    setDecoderModel(decoderModel);
+  }
+
+  onMount(() => {
+    init();
+    handleDecoderModelChange({target : {value: decoderModel}});
+    handleSceneModelChange({target : {value: sceneModel}});
+  });
 </script>
+
+<div class="top-bar">
+  <div class="left">
+    <!-- <div class="logo"> -->
+      <img class="logo" src={logo} alt="Logo"/>
+    <!-- </div> -->
+  </div>
+
+  <div class="right">
+    <div>
+      <label for="decoder-model">Decoder Model:</label>
+      <select
+        id="decoder-model"
+        bind:value={decoderModel}
+        onchange={handleDecoderModelChange}
+      >
+        <option value="" disabled>Select a model</option>
+        {#each modelOptions as model}
+          <option value={model}>{model}</option>
+        {/each}
+      </select>
+    </div>
+
+    <div>
+      <label for="scene-model">Scene Model:</label>
+      <select
+        id="scene-model"
+        bind:value={sceneModel}
+        onchange={handleSceneModelChange}
+      >
+        <option value="" disabled>Select a model</option>
+        {#each modelOptions as model}
+          <option value={model}>{model}</option>
+        {/each}
+      </select>
+    </div>
+  </div>
+</div>
+
 
 <div class="left-right">
   <!-- style="width: {writingAreaWidth}%; -->
   <div class="writing-area" style="padding: {padding_width}px">
-    <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}>{initial_text}</textarea>
+    <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}
+      >{initial_text}</textarea
+    >
   </div>
   <button
     class="divider"
@@ -289,6 +298,91 @@
 </div>
 
 <style>
+  /* Container styling */
+  /* div {
+    margin-bottom: 1em;
+  } */
+
+  .logo {
+    width: 2.5rem;
+  }
+
+
+  label {
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    margin-right: 0.5em;
+    margin-left: 1.5rem;
+  }
+
+  /* Dropdown styling */
+  select {
+    padding: 0.6em 1.2em;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    color: white;
+    cursor: pointer;
+    transition:
+      border-color 0.25s,
+      background-color 0.25s;
+  }
+
+  select:hover {
+    border-color: #646cff;
+  }
+
+  select:focus,
+  select:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+    background-color: #333;
+  }
+
+  /* Light mode styles */
+  @media (prefers-color-scheme: light) {
+    select {
+      background-color: #f9f9f9;
+      color: #213547;
+    }
+
+    select:hover {
+      border-color: #747bff;
+    }
+
+    select:focus,
+    select:focus-visible {
+      background-color: #e0e0e0;
+    }
+  }
+
+  .top-bar {
+    padding: 0.2rem;
+    height: 3rem;
+    background-color: #f2f2f2;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.2rem;
+  }
+
+  .right {
+    display: flex;
+    flex-direction: row;
+    align-items: right;
+    padding-right: 1rem;
+  }
+
   .left-right {
     display: flex;
     flex-direction: row;
