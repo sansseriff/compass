@@ -221,14 +221,22 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
         
 
-    # class ReturnType(BaseModel):
-    #     objects: list[GenericObject] = []
-    #     interfaces: list[GenericInterface] = []
+    # print("Recturn Type schema: ", ReturnType.model_json_schema())
 
-    # completion = ReturnType(scene=[Circle(name="circle", size=30, fill="green", position=Vector(x=0, y=0))])
+    # Build a scene description. Interfaces MUST be used between every object-object connection. 
+    # If Interface<name> MUST connect to an object with name <name>.
 
-    prompt = f"""Build a scene description. Interfaces MUST be used between every object-object connection.
+    # example: 
+    # InterfaceRF must connect to an object with name RF.
+    # InterfaceLight must connect to an object with name Light.
 
+    # You MUST include object <name> if you also include Interface<name> in the scene.
+
+
+    prompt = f"""
+    
+    If you use <InterfaceFiber>, you must connected it to an object with name <Fiber>.
+    Every <Fiber> requires 2 <InterfaceFiber> connections on both ends. 
 
     Common object parameters:
     x: -480(left) > x < 480(right). 0 is center of screen.

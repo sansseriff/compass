@@ -1,6 +1,8 @@
 import type { NodeProps, RectProps } from "@motion-canvas/2d";
 import { Rect, Node, Spline, Knot, Circle } from "@motion-canvas/2d";
 
+import type { Connection } from "./util";
+
 import type {
   SignalValue,
   PossibleColor,
@@ -29,18 +31,24 @@ export interface BoxProps extends NodeProps {
   fill?: SignalValue<PossibleColor>;
 }
 
+
+
 export class Box extends Node {
-  @signal()
-  public declare readonly portInput: SimpleSignal<Vector2, void>
+  // @signal()
+  // public declare readonly portInput: SimpleSignal<Vector2, void>
+
+  // @signal()
+  // public declare readonly portOutput: SimpleSignal<Vector2, void>
+
+  public declare readonly portInput: Connection;
+
+  public declare readonly portOutput: Connection;
 
   @signal()
-  public declare readonly portOutput: SimpleSignal<Vector2, void>
+  public declare readonly width: SimpleSignal<number, void>;
 
   @signal()
-  public declare readonly width: SimpleSignal<number>;
-
-  @signal()
-  public declare readonly height: SimpleSignal<number>;
+  public declare readonly height: SimpleSignal<number, void>;
 
   @signal()
   public declare readonly fill: SimpleSignal<PossibleColor>;
@@ -54,9 +62,13 @@ export class Box extends Node {
       ...props,
     });
 
+    // to be overridden
+    this.portInput = {position: createSignal(new Vector2(0, 0)), light: createSignal(false)};
+    this.portOutput = {position: createSignal(new Vector2(0, 0)), light: createSignal(false)};
 
-    this.port_1 = new Circle({x: 10, y: 10, fill:"#363636", width: 10, height: 10});
-    this.port_2 = new Circle({x: -10, y: 10, fill:"#363636", width: 10, height: 10});
+
+    this.port_1 = new Circle({x: this.width()/2 - 10, y: this.height()/2 - 10, fill:"#363636", width: 10, height: 10});
+    this.port_2 = new Circle({x: -(this.width()/2 - 10), y: this.height()/2 - 10, fill:"#363636", width: 10, height: 10});
     this.rect = new Rect({
       smoothCorners: true,
       radius: 5,
@@ -89,7 +101,7 @@ export class Box extends Node {
     // console.log("singal updated")
     // console.log("updated signal: ", this.portInput())
 
-    this.portOutput = createSignal(() => this.port_1.absolutePosition());
-    this.portInput = createSignal(() => this.port_2.absolutePosition());
+    this.portOutput.position = createSignal(() => this.port_1.absolutePosition());
+    this.portInput.position = createSignal(() => this.port_2.absolutePosition());
   }
 }

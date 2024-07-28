@@ -5,21 +5,24 @@ import {createSignal, Vector2} from '@motion-canvas/core';
 //     port: string;
 // }
 
-export interface ObjectPointer {
+// export interface ObjectPointer {
+//     obj_id: string;
+//     port: string;
+// }
+
+// export interface FiberPointer {
+//     fiber_id: string;
+//     port: string;
+// }
+
+export interface Port {
     obj_id: string;
     port: string;
 }
 
-export interface FiberPointer {
-    fiber_id: string;
-    port: string;
-}
-
-
-
 export interface InterfaceWireProps {
-    donator_obj: ObjectPointer;
-    fiber: FiberPointer;
+    from_: Port;
+    to: Port;
 }
 
 
@@ -44,8 +47,8 @@ export interface InterfaceWireProps {
 
 
 export interface InterfaceFiberProps {
-    donator_obj: C;
-    fiber: C;
+    from_: Port;
+    to: Port;
 }
 
 

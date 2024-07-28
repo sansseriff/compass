@@ -252,12 +252,14 @@
 
 
   const colors = ["red", "green", "blue", "yellow", "purple", "orange"];
+
+  const initial_text = "A box connected to another box via fiber."
 </script>
 
 <div class="left-right">
   <!-- style="width: {writingAreaWidth}%; -->
   <div class="writing-area" style="padding: {padding_width}px">
-    <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
+    <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}>{initial_text}</textarea>
   </div>
   <button
     class="divider"

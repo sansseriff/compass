@@ -11,6 +11,8 @@ import { all, Vector2 } from "@motion-canvas/core";
 import { Box } from "./nodes/Box";
 import { Fiber } from "./nodes/Fiber";
 
+import type { Connection } from "./nodes/util";
+
 import type { ReturnType } from "./fetch_types";
 import type {
   InterfaceWireProps,
@@ -79,6 +81,11 @@ function createObject(data: any): Node | null {
 
 // }
 
+interface FiberPort {
+  donate_position: boolean;
+  donate_light: boolean;
+}
+
 export function createSceneFromText(
   jsonData: ReturnType
 ): (
@@ -101,51 +108,76 @@ export function createSceneFromText(
 
         if (jsonData.interfaces) {
           for (const node_interface of jsonData.interfaces) {
-            const donator_store = { index: 0, port: "" };
-            const acceptor_store = { index: 0, port: "" };
+            const from_store = { index: 0, port: "" };
+            const to_store = { index: 0, port: "" };
+            const portTypeKey_from = node_interface.from_.port + "Type"; // portInputType or portOutputType
+            const portTypeKey_to = node_interface.to.port + "Type"; // portInputType or portOutputType
 
-            // find the donator
-            for (const [
-              node_idx,
-              possible_donator,
-            ] of jsonData.objects.entries()) {
+            // find the "from" object
+            for (const [node_idx, object_from] of jsonData.objects.entries()) {
+              
               if (
-                possible_donator.id === node_interface.donator_obj.obj_id &&
-                node_interface.donator_obj.port in possible_donator
+                object_from.id === node_interface.from_.obj_id &&
+                portTypeKey_from in object_from
               ) {
-                donator_store.index = node_idx;
-                donator_store.port = node_interface.donator_obj.port;
+                from_store.index = node_idx;
+                from_store.port = node_interface.from_.port;
               }
             }
 
-            // find the acceptor
+            // find the "to" object
             for (const [
               node_idx,
-              possible_acceptor,
+              object_to,
             ] of jsonData.objects.entries()) {
               if (
-                possible_acceptor.id === node_interface.fiber.fiber_id &&
-                node_interface.fiber.port in possible_acceptor
+                object_to.id === node_interface.to.obj_id &&
+                portTypeKey_to in object_to
               ) {
-                acceptor_store.index = node_idx;
-                acceptor_store.port = node_interface.fiber.port;
+                to_store.index = node_idx;
+                to_store.port = node_interface.to.port;
               }
             }
             console.log(
               "this is the donator store: ",
-              donator_store,
-              nodes[donator_store.index]
+              from_store,
+              nodes[from_store.index]
             );
             console.log(
               "this is the acceptor store: ",
-              acceptor_store,
-              nodes[acceptor_store.index]
+              to_store,
+              nodes[to_store.index]
             );
 
+
+            const port_from_instruction: FiberPort = (jsonData.objects[from_store.index] as any)[portTypeKey_from];
+            const port_to_instruction: FiberPort = (jsonData.objects[to_store.index] as any)[portTypeKey_to];
+            console.log("this is the port from instruction: ", port_from_instruction);
+            console.log("this is the port to instruction: ", port_to_instruction);
+
+            const port_from: Connection = (nodes[from_store.index] as any)[from_store.port];
+            const port_to: Connection = (nodes[to_store.index] as any)[to_store.port];
+
+
+            // if the "from" port donates a signal and the "to" port does not, then give the "to" port the signal from the "from" port
+            if (port_from_instruction.donate_position && !port_to_instruction.donate_position) {
+              port_to.position = port_from.position;
+            }
+            else if (!port_from_instruction.donate_position && port_to_instruction.donate_position) {
+              port_from.position = port_to.position;
+            }
+
+            if (port_from_instruction.donate_light && !port_to_instruction.donate_light) {
+              port_to.light = port_from.light;
+            }
+            else if (!port_from_instruction.donate_light && port_to_instruction.donate_light) {
+              port_from.light = port_to.light;
+            }
+
             // give the acceptor the signal from the donator
-            (nodes[acceptor_store.index] as any)[acceptor_store.port] = (
-              nodes[donator_store.index] as any
-            )[donator_store.port];
+            // (nodes[from_store.index] as any)[acceptor_store.port] = (
+            //   nodes[donator_store.index] as any
+            // )[donator_store.port];
           }
         }
 
@@ -194,8 +226,10 @@ export function createSceneFromText(
         console.log(nodes);
 
         yield* all(
-          nodes[0].position(new Vector2(0, 100), 2).to(new Vector2(0, -100), 2),
-          nodes[0].rotation(180, 1).to(-180, 1)
+          nodes[0].position(nodes[0]?.position().add(new Vector2(0,50)), 2).to(nodes[0]?.position().add(new Vector2(0,-50)), 2).to(nodes[0]?.position().add(new Vector2(0,0)), 2),
+          nodes[0].rotation(20, 1).to(-20, 1).to(0, 1),
+          nodes[1].position(nodes[1]?.position().add(new Vector2(0,50)), 2).to(nodes[1]?.position().add(new Vector2(0,-50)), 2).to(nodes[1]?.position().add(new Vector2(0,0)), 2),
+          nodes[1].rotation(20, 1).to(-20, 1).to(0, 1),
         );
       } catch (e) {
         console.log("error: ", e);

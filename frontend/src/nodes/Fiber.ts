@@ -8,10 +8,12 @@ import {createSignal, Vector2} from '@motion-canvas/core';
 
 import { signal, initial } from "@motion-canvas/2d";
 
+import type { Connection } from "./util";
+
 
 export interface FiberProps extends NodeProps {
-    fiber_start: SignalValue<number>
-    fiber_end: SignalValue<number>
+    // fiber_start: SignalValue<number>
+    // fiber_end: SignalValue<number>
     lineWidth: SignalValue<number>
   }
 
@@ -19,12 +21,12 @@ export class Fiber extends Node {
 
     // @initial(createSignal(new Vector2(0,0)))
     @signal()
-    public declare readonly portInput: SimpleSignal<PossibleVector2>;
+    public declare readonly portInput: Connection;
 
 
     // @initial(new Vector2(50,0))
     @signal()
-    public declare readonly portOutput: SimpleSignal<PossibleVector2>;
+    public declare readonly portOutput: Connection;
 
 
     @signal()
@@ -43,8 +45,12 @@ export class Fiber extends Node {
             ...props,
         });
 
+        // to be overridden
+        this.portInput = {position: createSignal(new Vector2(0, 0)), light: createSignal(false)};
+        this.portOutput = {position: createSignal(new Vector2(50, 0)), light: createSignal(false)};
+
         console.log("adding spline details")
-        console.log("and this is the port input signal: ", this.portInput())
+        console.log("and this is the port input signal: ", this.portInput.position())
 
         this.knot_2 = new Knot({startHandle: [-100, 0]})
         this.knot_1 = new Knot({startHandle: [-100, 0]})
@@ -52,8 +58,8 @@ export class Fiber extends Node {
             
             children: [this.knot_1, this.knot_2]})
 
-        this.knot_1.absolutePosition(() => this.portInput());
-        this.knot_2.absolutePosition(() => this.portOutput());
+        this.knot_1.absolutePosition(() => this.portInput.position());
+        this.knot_2.absolutePosition(() => this.portOutput.position());
 
         this.add(
             this.sp

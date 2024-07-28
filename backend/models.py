@@ -1,7 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal
 from pydantic.json_schema import SkipJsonSchema
 from enum import Enum
+from pydantic.json_schema import SkipJsonSchema
+
+from typing import Any
 
 
 # class Vector(BaseModel):
@@ -18,19 +21,28 @@ from enum import Enum
 
 
 
-class ObjectPointer(BaseModel):
-    obj_id: str = Field(..., description="id of existing object. Like box1, fiber2, circle1, etc.")
+# class ObjectPointer(BaseModel):
+#     obj_id: str = Field(..., description="id of existing object. Like box1, fiber2, circle1, etc.")
+#     port: Literal["portInput", "portOutput", "portLeft", "portRight"]
+
+# class FiberPointer(BaseModel):
+#     fiber_id: str = Field(..., description="id of existing fiber object. Like fiber1, fiber2, etc.")
+#     port: Literal["portInput", "portOutput"]
+
+
+# portOutput of box1 connects to portInput of 
+class Port(BaseModel):
+    obj_id: str = Field(..., description="id of existing object . Like box1, fiber2, circle1, etc.")
     port: Literal["portInput", "portOutput", "portLeft", "portRight"]
 
-class FiberPointer(BaseModel):
-    fiber_id: str = Field(..., description="id of existing fiber object. Like fiber1, fiber2, etc.")
-    port: Literal["portInput", "portOutput"]
-
-
 class InterfaceFiber(BaseModel):
-    t: Literal["InterfaceFiber"] = Field("InterfaceFiber", description="connects fiber to non-fiber object")
-    donator_obj: ObjectPointer = Field(..., description="should ONLY point to a non-fiber object")
-    fiber: FiberPointer = Field(..., description="should ONLY point to a fiber object. fiber1, fiber2, etc.")
+    t: Literal["InterfaceFiber"] = Field("InterfaceFiber")
+    from_: Port
+    to: Port
+
+    model_config = ConfigDict(json_schema_extra={
+        # 't': 'InterfaceFiber',
+        'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object"})
 
 
 class SuperNode:
@@ -58,6 +70,8 @@ class Circle(BaseModel):
     lineWidth: float = 0
     x: float
     y: float
+
+    # model_config = ConfigDict(json_schema_extra={'t': 'Circle'})
     
 
 
@@ -81,6 +95,8 @@ class Polygon(BaseModel):
     y: float
     lineWidth: float = 0
 
+    # model_config = ConfigDict(json_schema_extra={'t': 'Polygon'})
+
 
 class SuperPolygon(SuperNode):
     names =  ["polygon", "triangle", "pentagon", "hexagon", "octagon", "nonagon", "decagon", "dodecagon"]
@@ -102,25 +118,48 @@ class Rect(BaseModel):
     y: float
     lineWidth: float = 0
 
+    # model_config = ConfigDict(json_schema_extra={'t': 'Rect'})
+
 class SuperRect(SuperNode):
     names = ["rect", "square", "rectangle"]
     def __init__(self):
         pass
     def model(self):
         return [Rect]
+    
 
+# only used by frontend for dependency resolution
+class FiberPort(BaseModel):
+    donate_position: bool
+    donate_light: bool
 
 class Box(BaseModel):
     t: Literal["Box"] = "Box"
     id: str = Field(..., description="a unique id for the Box object. Like box1, box2, etc.")
-    name: Literal["box", "object"] = "box"
-    portInput: Literal["donator"] = "donator"
-    portOutput: Literal["donator"] = "donator"
-    width: float = 50
-    height: float = 50
+    name: SkipJsonSchema[Literal["box", "object"]] = "box"
+    width: float = 150
+    height: float = 75
     x: float
     y: float
     fill: str = "gray"
+
+    # hidden
+    portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=False)
+    portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=True)
+
+    model_config = ConfigDict(json_schema_extra={
+        # 't': 'Box', 
+        'available_ports': ["portInput", "portOutput"]})
+
+    @classmethod
+    def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
+        schema = super().model_json_schema(*args, **kwargs)
+
+        schema.pop('title', None)
+        for prop in schema.get('properties', {}).values():
+            prop.pop('title', None)
+
+        return schema
 
 class SuperBox(SuperNode):
     names = ["box", "object"]
@@ -133,11 +172,28 @@ class SuperBox(SuperNode):
     
 class Fiber(BaseModel):
     t: Literal["Fiber"] = "Fiber"
-    name: Literal["fiber", "cable", "wire"] = "fiber"
+    name: SkipJsonSchema[Literal["fiber", "cable", "wire"]] = "fiber"
     id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
-    portInput: Literal["acceptor"] = "acceptor"
-    portOutput: Literal["acceptor"] = "acceptor"
-    lineWidth: float = 2
+    lineWidth: float = 10
+
+    # hidden
+    portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=False)
+    portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=True)
+
+    model_config = ConfigDict(json_schema_extra={
+        # 't': "Fiber", 
+        # 'notes': "Fiber is an OBJECT. Fiber is NOT an edge-like or interface-like entity. ",
+        'available_ports': ["portInput", "portOutput"]})
+
+    @classmethod
+    def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
+        schema = super().model_json_schema(*args, **kwargs)
+
+        schema.pop('title', None)
+        for prop in schema.get('properties', {}).values():
+            prop.pop('title', None)
+
+        return schema
 
 class SuperFiber(SuperNode):
     names = ["fiber", "cable", "wire"]
