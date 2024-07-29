@@ -11,24 +11,24 @@ from pydantic_core import CoreSchema
 
 class PModel(BaseModel):
 
+    pass
+    # @classmethod
+    # def __get_pydantic_json_schema__(
+    #     cls,
+    #     __core_schema: CoreSchema,
+    #     __handler):
+    #     schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
+    #     def remove_titles(d: dict):
+    #         d.pop('title', None)
+    #         for value in d.values():
+    #             if isinstance(value, dict):
+    #                 remove_titles(value)
 
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls,
-        __core_schema: CoreSchema,
-        __handler):
-        schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
-        def remove_titles(d: dict):
-            d.pop('title', None)
-            for value in d.values():
-                if isinstance(value, dict):
-                    remove_titles(value)
+    #     schema.pop('title', None)
+    #     for prop in schema.get('properties', {}).values():
+    #         remove_titles(prop)
 
-        schema.pop('title', None)
-        for prop in schema.get('properties', {}).values():
-            remove_titles(prop)
-
-        return schema
+    #     return schema
 
 
 config_setter = False

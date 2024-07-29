@@ -292,7 +292,7 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
             # model="llama-3.1-8b-instant",
             # model="llama3-groq-8b-8192-tool-use-preview",
             # model="mixtral-8x7b-32768",
-            max_tokens = 2000,
+            # max_tokens = 2000,
             messages=[
                 {
                     "role": "user",
