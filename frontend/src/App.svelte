@@ -43,8 +43,13 @@
   import { createSceneFromText } from "./instantiate";
 
   import { Box } from "./nodes/Box";
+  import { Laser } from "./nodes/Laser";
+  import { Switch } from "./nodes/Switch";
+  import { Detector } from "./nodes/Detector";
 
-  import logo from './assets/logo.svg';
+  import logo from "./assets/logo.svg";
+
+  import DraggableBox from "./DraggableBox.svelte";
 
   let loading = $state(false);
   let time_scalar = $state(1);
@@ -54,13 +59,15 @@
 
   let previewRef: HTMLDivElement;
   let padding_width = 30;
-  let canvas_width = 500;
+  let canvas_width = $state(500);
 
   let currentSceneScalable;
 
   let variables = { circleFill: "red" };
 
+  import { globalRefs } from "./global_ref"
 
+  // Global object to store references
   
 
   // function createInitialScene(scale_factor = 1) {
@@ -98,26 +105,36 @@
   ) => FullSceneDescription<ThreadGeneratorFactory<View2D>> {
     const scalableScene = (scale_factor: number) => {
       const Description = makeScene2D(function* (view) {
-        const box = new Box({
-          x: 100,
-          y: 0,
-          width: 100,
-          height: 100,
-          scale: 1,
-          fill: "#e13238",
-        });
+        // const box = new Box({
+        //   x: 100,
+        //   y: 0,
+        //   width: 100,
+        //   height: 100,
+        //   scale: 1,
+        //   fill: "#e13238",
+        // });
 
-        const circle = new Circle({
-          position: () => box.portOutput.position(),
-          width: 30,
-          height: 30,
-          fill: "green",
-          scale: 1,
-        });
+        // const circle = new Circle({
+        //   position: () => box.portOutput.position(),
+        //   width: 30,
+        //   height: 30,
+        //   fill: "green",
+        //   scale: 1,
+        // });
 
-        view.add([box, circle]);
+        const laser = new Laser({ x: 0, y: 0 });
+        const switch_element = new Switch({ x: 100, y: 0, open: false });
+        const detector = new Detector({ x: 200, y: 0 });
 
-        yield* box.position(new Vector2(-100, 0), 1).to(new Vector2(100, 0), 1);
+        // Store references in the global object
+        globalRefs.laser = laser;
+        globalRefs.switch_element = switch_element;
+
+        view.add([laser, switch_element, detector]);
+
+        yield* laser
+          .position(new Vector2(-100, 0), 1)
+          .to(new Vector2(100, 0), 1);
         // );
       });
 
@@ -138,10 +155,8 @@
 
     const rightWidthPx = containerWidth - initialWidthPx;
     player = borrowPlayer(previewRef, player, rightWidthPx, variables);
-    updatePlayer(currentSceneScalable(size / 960));
+    updatePlayer(currentSceneScalable(canvas_width / 960));
   }
-
-  
 
   let visualAreaWidth = $state(50); // Initial width in percentage
 
@@ -193,7 +208,8 @@
 
   const colors = ["red", "green", "blue", "yellow", "purple", "orange"];
 
-  const initial_text = "A box connected to another box via fiber.";
+  const initial_text =
+    "A laser connected to a detector via fiber with a switch connected in between.";
 
   let decoderModel = $state("llama3-groq-70b-8192-tool-use-preview");
   let sceneModel = $state("gpt-4o-mini");
@@ -204,6 +220,7 @@
     "llama3-groq-70b-8192-tool-use-preview",
     "llama3-groq-8b-8192-tool-use-preview",
     "mixtral-8x7b-32768",
+    "claude-3-5-sonnet-20240620",
   ];
 
   function handleSceneModelChange(event) {
@@ -219,94 +236,146 @@
 
   onMount(() => {
     init();
-    handleDecoderModelChange({target : {value: decoderModel}});
-    handleSceneModelChange({target : {value: sceneModel}});
+    handleDecoderModelChange({ target: { value: decoderModel } });
+    handleSceneModelChange({ target: { value: sceneModel } });
   });
+
+  let boxes = [
+    { x: 0, y: 0, width: 50, height: 50 },
+    { x: 200, y: 150, width: 150, height: 150 },
+    // Add more boxes as needed
+  ];
+
+  function getScaledBoxes() {
+    const scale = canvas_width / 960;
+    console.log("scale: ", scale);
+    return boxes.map((box) => ({
+      x: Math.floor(box.x * scale),
+      y: Math.floor(box.y * scale),
+      width: Math.floor(box.width * scale),
+      height: Math.floor(box.height * scale),
+    }));
+  }
+
+  let scaled_boxes = $derived.by(() => getScaledBoxes())
+
+
 </script>
 
-<div class="top-bar">
-  <div class="left">
-    <!-- <div class="logo"> -->
-      <img class="logo" src={logo} alt="Logo"/>
-    <!-- </div> -->
-  </div>
-
-  <div class="right">
-    <div>
-      <label for="decoder-model">Decoder Model:</label>
-      <select
-        id="decoder-model"
-        bind:value={decoderModel}
-        onchange={handleDecoderModelChange}
-      >
-        <option value="" disabled>Select a model</option>
-        {#each modelOptions as model}
-          <option value={model}>{model}</option>
-        {/each}
-      </select>
+<div class="container">
+  <div class="top-bar">
+    <div class="left">
+      <!-- <div class="logo"> -->
+      <img class="logo" src={logo} alt="Logo" />
+      <!-- </div> -->
     </div>
 
-    <div>
-      <label for="scene-model">Scene Model:</label>
-      <select
-        id="scene-model"
-        bind:value={sceneModel}
-        onchange={handleSceneModelChange}
-      >
-        <option value="" disabled>Select a model</option>
-        {#each modelOptions as model}
-          <option value={model}>{model}</option>
-        {/each}
-      </select>
-    </div>
-  </div>
-</div>
+    <div class="right">
+      <div>
+        <label for="decoder-model">Decoder Model:</label>
+        <select
+          id="decoder-model"
+          bind:value={decoderModel}
+          onchange={handleDecoderModelChange}
+        >
+          <option value="" disabled>Select a model</option>
+          {#each modelOptions as model}
+            <option value={model}>{model}</option>
+          {/each}
+        </select>
+      </div>
 
-
-<div class="left-right">
-  <!-- style="width: {writingAreaWidth}%; -->
-  <div class="writing-area" style="padding: {padding_width}px">
-    <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}
-      >{initial_text}</textarea
-    >
-  </div>
-  <button
-    class="divider"
-    onmousedown={startDrag}
-    role="separator"
-    aria-orientation="vertical"
-  ></button>
-  <!-- style="width: {100 - writingAreaWidth}%;" -->
-  <div class="visual-area" style="padding: {padding_width}px; width: 100%">
-    <div class="together">
-      <PreloadingIndicator {loading} {time_scalar} />
-      <div class="preview" bind:this={previewRef}>
-        {#if !player}
-          <div>Press play to preview the animation</div>
-        {/if}
+      <div>
+        <label for="scene-model">Scene Model:</label>
+        <select
+          id="scene-model"
+          bind:value={sceneModel}
+          onchange={handleSceneModelChange}
+        >
+          <option value="" disabled>Select a model</option>
+          {#each modelOptions as model}
+            <option value={model}>{model}</option>
+          {/each}
+        </select>
       </div>
     </div>
+  </div>
 
-    <button class="button" onclick={() => player.togglePlayback()}
-      >toggle playback</button
-    >
+  <div class="left-right">
+    <!-- style="width: {writingAreaWidth}%; -->
+    <div class="writing-area" style="padding: {padding_width}px">
+      <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}
+        >{initial_text}</textarea
+      >
+      <!-- <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
+      <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
+      <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
+      <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
+      <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea>
+      <textarea name="paragraph_text" onkeydown={(e) => handleText(e)}></textarea> -->
+    </div>
+    <button
+      class="divider"
+      onmousedown={startDrag}
+      role="separator"
+      aria-orientation="vertical"
+    ></button>
+    <!-- style="width: {100 - writingAreaWidth}%;" -->
+    <div class="visual-area" style="padding: {padding_width}px; width: 100%">
+      <div class="together">
+        <PreloadingIndicator {loading} {time_scalar} />
+        <!-- <div class="container"> -->
+        <div class="preview" bind:this={previewRef}>
+          {#if !player}
+            <div>Press play to preview the animation</div>
+          {/if}
+        </div>
+        <div class="draggable-container">
+          {#each scaled_boxes as scaled_box}
+            <DraggableBox {...scaled_box} />
+          {/each}
+        </div>
+        <!-- </div> -->
+      </div>
 
-    <!-- <button class="button" onclick={() => {variables.circleFill = colors[Math.floor(Math.random() * 6)]}}>Change to Green</button> -->
+      <button class="button" onclick={() => { globalRefs.laser.on(true); 
+        player.togglePlayback();
+        } }
+        >toggle playback</button
+      >
 
-    <!-- <button class="button" onclick={swapScene}>New Scene</button> -->
+      <!-- <button class="button" onclick={() => {variables.circleFill = colors[Math.floor(Math.random() * 6)]}}>Change to Green</button> -->
+
+      <!-- <button class="button" onclick={swapScene}>New Scene</button> -->
+    </div>
   </div>
 </div>
 
 <style>
-  /* Container styling */
-  /* div {
-    margin-bottom: 1em;
-  } */
+  .draggable-container {
+    position: absolute;
+    /* width: 100%;
+    height: 100%; */
+    top: 4px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Ensure it appears on top */
+  }
+
+  .together {
+    position: relative
+  }
+
+  .container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
 
   .logo {
     width: 2.5rem;
   }
-
 
   label {
     font-size: 1em;
@@ -345,7 +414,7 @@
   /* Light mode styles */
   @media (prefers-color-scheme: light) {
     select {
-      background-color: #f9f9f9;
+      background-color: #f2f2f2;
       color: #213547;
     }
 
@@ -359,10 +428,19 @@
     }
   }
 
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  }
+
   .top-bar {
     padding: 0.2rem;
     height: 3rem;
-    background-color: #f2f2f2;
+    background-color: #fafafa;
+    border-bottom: 1px solid #f2f2f2;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -379,23 +457,23 @@
   .right {
     display: flex;
     flex-direction: row;
-    align-items: right;
+    align-items: center;
     padding-right: 1rem;
   }
 
   .left-right {
+    /* display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 92vh;
+    width: 100vw !important;
+    box-sizing: border-box;  */
+    flex: 1; /* Take up the remaining space */
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    height: 100vh;
-  }
-
-  .writing-area {
-    width: 10000%; /* this is some weird hack to make the textarea fill the space */
-    display: flex;
-    flex-direction: column;
-    align-items: end;
-    justify-content: center;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    overflow: hidden; /* Prevent overflow */
   }
 
   .divider {
@@ -411,42 +489,63 @@
   }
 
   .visual-area {
-    width: 100%;
+    width: 90%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-around;
   }
 
+  textarea {
+    /* flex: 1; */
+    height: 100px;
+    margin: 5px 0;
+    box-sizing: border-box;
+  }
+
+  .writing-area {
+    width: 10000%; /* this is some weird hack to make the textarea fill the space */
+    /* height: 100%; */
+    display: flex;
+
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0rem;
+    overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    /* height: 100%; */
+  }
+
   .writing-area textarea {
     width: 100%;
-    height: 10rem;
-
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f5f5f5;
+    border-radius: 2px;
+    /* box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); */
     outline: none;
     resize: vertical;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     font-size: 16px;
     line-height: 1.5;
     color: #333;
-    background-color: #fafafa;
+    background-color: #ffffff;
     transition:
       border-color 0.3s,
       box-shadow 0.3s;
+    overflow-y: auto;
   }
 
   .writing-area textarea:focus {
-    border-color: #007bff;
+    border-color: #9dccff;
     box-shadow:
       inset 0 1px 3px rgba(0, 0, 0, 0.1),
-      0 0 8px rgba(0, 123, 255, 0.5);
+      0 0 8px rgba(0, 123, 255, 0.2);
   }
 
   .preview {
     width: auto;
     height: auto;
+    /* width: 100%; */
     background-color: var(--ifm-background-surface-color);
     overflow: hidden;
     display: flex;

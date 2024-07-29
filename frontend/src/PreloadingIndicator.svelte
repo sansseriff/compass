@@ -49,7 +49,7 @@
 		width: 100%;
 		pointer-events: none;
 		contain: paint;
-		height: 0.3em;
+		height: 4px;
 		z-index: 999;
 		will-change: opacity;
 

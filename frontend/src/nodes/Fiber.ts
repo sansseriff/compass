@@ -46,8 +46,11 @@ export class Fiber extends Node {
         });
 
         // to be overridden
+
+        
+
         this.portInput = {position: createSignal(new Vector2(0, 0)), light: createSignal(false)};
-        this.portOutput = {position: createSignal(new Vector2(50, 0)), light: createSignal(false)};
+        this.portOutput = {position: createSignal(new Vector2(50, 0)), light: () => this.portInput.light()};
 
         console.log("adding spline details")
         console.log("and this is the port input signal: ", this.portInput.position())

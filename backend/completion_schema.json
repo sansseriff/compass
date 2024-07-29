@@ -1,0 +1,253 @@
+{
+    "$defs": {
+        "Detector": {
+            "properties": {
+                "t": {
+                    "const": "Detector",
+                    "default": "Detector",
+                    "enum": [
+                        "Detector"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "description": "a unique id for the Detector object. Like detector1, detector2, etc.",
+                    "type": "string"
+                },
+                "width": {
+                    "default": 110,
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "available_ports": {
+                    "const": "portInput",
+                    "default": "portInput",
+                    "enum": [
+                        "portInput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "x",
+                "y"
+            ],
+            "type": "object"
+        },
+        "Fiber": {
+            "properties": {
+                "t": {
+                    "const": "Fiber",
+                    "default": "Fiber",
+                    "enum": [
+                        "Fiber"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "description": "a unique id for the Fiber object. Like fiber1, fiber2, etc.",
+                    "type": "string"
+                },
+                "lineWidth": {
+                    "default": 10,
+                    "type": "number"
+                },
+                "available_ports": {
+                    "const": "portInput, portOutput",
+                    "default": "portInput, portOutput",
+                    "enum": [
+                        "portInput, portOutput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "type": "object"
+        },
+        "InterfaceFiber": {
+            "instructions": "either _from.obj_id or to.obj_id MUST be a Fiber object. Use the available Fiber object.",
+            "properties": {
+                "t": {
+                    "const": "InterfaceFiber",
+                    "default": "InterfaceFiber",
+                    "enum": [
+                        "InterfaceFiber"
+                    ],
+                    "type": "string"
+                },
+                "from_": {
+                    "$ref": "#/$defs/Port"
+                },
+                "to": {
+                    "$ref": "#/$defs/Port"
+                }
+            },
+            "required": [
+                "from_",
+                "to"
+            ],
+            "type": "object"
+        },
+        "Laser": {
+            "properties": {
+                "t": {
+                    "const": "Laser",
+                    "default": "Laser",
+                    "enum": [
+                        "Laser"
+                    ],
+                    "type": "string"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "width": {
+                    "default": 145,
+                    "type": "number"
+                },
+                "id": {
+                    "description": "a unique id. Like laser1, laser2, etc.",
+                    "type": "string"
+                },
+                "on": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "available_ports": {
+                    "const": "portOutput",
+                    "default": "portOutput",
+                    "enum": [
+                        "portOutput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "id"
+            ],
+            "type": "object"
+        },
+        "Port": {
+            "properties": {
+                "obj_id": {
+                    "description": "id of existing object . Like box1, fiber2, circle1, etc.",
+                    "type": "string"
+                },
+                "port": {
+                    "enum": [
+                        "portInput",
+                        "portOutput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "obj_id",
+                "port"
+            ],
+            "type": "object"
+        },
+        "Switch": {
+            "properties": {
+                "t": {
+                    "const": "Switch",
+                    "default": "Switch",
+                    "enum": [
+                        "Switch"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "description": "a unique id for the Switch object. Like switch1, switch2, etc.",
+                    "type": "string"
+                },
+                "width": {
+                    "default": 120,
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "open": {
+                    "default": false,
+                    "description": "if switch is internally open or closed. Has no impact on connected ports",
+                    "type": "boolean"
+                },
+                "available_ports": {
+                    "const": "portInput, portOutput",
+                    "default": "portInput, portOutput",
+                    "enum": [
+                        "portInput, portOutput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "x",
+                "y"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "objects": {
+            "items": {
+                "discriminator": {
+                    "mapping": {
+                        "Detector": "#/$defs/Detector",
+                        "Fiber": "#/$defs/Fiber",
+                        "Laser": "#/$defs/Laser",
+                        "Switch": "#/$defs/Switch"
+                    },
+                    "propertyName": "t"
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/$defs/Detector"
+                    },
+                    {
+                        "$ref": "#/$defs/Fiber"
+                    },
+                    {
+                        "$ref": "#/$defs/Laser"
+                    },
+                    {
+                        "$ref": "#/$defs/Switch"
+                    }
+                ]
+            },
+            "title": "Objects",
+            "type": "array"
+        },
+        "interfaces": {
+            "items": {
+                "$ref": "#/$defs/InterfaceFiber"
+            },
+            "title": "Interfaces",
+            "type": "array"
+        }
+    },
+    "required": [
+        "objects",
+        "interfaces"
+    ],
+    "title": "ReturnType",
+    "type": "object"
+}

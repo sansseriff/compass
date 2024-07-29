@@ -10,6 +10,9 @@ import { all, Vector2 } from "@motion-canvas/core";
 
 import { Box } from "./nodes/Box";
 import { Fiber } from "./nodes/Fiber";
+import { Laser } from "./nodes/Laser";
+import { Switch } from "./nodes/Switch";
+import { Detector } from "./nodes/Detector";
 
 import type { Connection } from "./nodes/util";
 
@@ -18,6 +21,8 @@ import type {
   InterfaceWireProps,
   InterfaceFiberProps,
 } from "./node_interface/FiberInterface";
+
+import { globalRefs } from "./global_ref"
 
 type Constructor<T> = new (data: any) => T;
 
@@ -39,6 +44,9 @@ registerObject("Line", Line);
 registerObject("Polygon", Polygon);
 registerObject("Box", Box);
 registerObject("Fiber", Fiber);
+registerObject("Laser", Laser);
+registerObject("Switch", Switch);
+registerObject("Detector", Detector);
 
 // registerInterface("InterfaceWire", InterfaceWire);
 // registerInterface("InterfaceFiber", InterfaceFiber);
@@ -152,10 +160,21 @@ export function createSceneFromText(
 
             const port_from_instruction: FiberPort = (jsonData.objects[from_store.index] as any)[portTypeKey_from];
             const port_to_instruction: FiberPort = (jsonData.objects[to_store.index] as any)[portTypeKey_to];
-            console.log("this is the port from instruction: ", port_from_instruction);
-            console.log("this is the port to instruction: ", port_to_instruction);
+            // console.log("this is the port from instruction: ", port_from_instruction);
+            // console.log("this is the port to instruction: ", port_to_instruction);
 
+            // console.log("nodes: ", nodes);
+
+
+            console.log("trying to get the ", from_store.port, " port from ", nodes[from_store.index]);
             const port_from: Connection = (nodes[from_store.index] as any)[from_store.port];
+
+            if (nodes[from_store.index] == undefined || nodes[to_store.index] == undefined) {
+              console.log("remember to add to registry!")
+            }
+
+            console.log("trying to get the ", to_store.port, " port from ", nodes[to_store.index]);
+            console.log("the node idx is ", to_store.index, "and the length is", nodes.length);
             const port_to: Connection = (nodes[to_store.index] as any)[to_store.port];
 
 
@@ -225,11 +244,13 @@ export function createSceneFromText(
         view.add(top_node);
         console.log(nodes);
 
+        globalRefs.laser = nodes[0];
+
         yield* all(
           // nodes[0].position(nodes[0]?.position().add(new Vector2(0,50)), 2).to(nodes[0]?.position().add(new Vector2(0,-50)), 2).to(nodes[0]?.position().add(new Vector2(0,0)), 2),
-          nodes[0].rotation(10, .2).to(-10, .2).to(0, .2),
+          nodes[0].rotation(7, .5).to(-7, .5).to(0, .5),
           // nodes[1].position(nodes[1]?.position().add(new Vector2(0,50)), 2).to(nodes[1]?.position().add(new Vector2(0,-50)), 2).to(nodes[1]?.position().add(new Vector2(0,0)), 2),
-          nodes[1].rotation(10, .2).to(-10, .2).to(0, .2),
+          nodes[1].rotation(7, .5).to(-7, .5).to(0, .5),
         );
       } catch (e) {
         console.log("error: ", e);

@@ -6,48 +6,67 @@ from pydantic.json_schema import SkipJsonSchema
 
 from typing import Any
 
-
-# class Vector(BaseModel):
-#     x: float
-#     y: float
-
-# class PortEnum(Enum):
-#     INPUT = 1
-#     OUTPUT = 2
-#     LEFT = 3
-#     RIGHT = 4
-#     OTHER = 5
+from pydantic_core import CoreSchema
 
 
+class PModel(BaseModel):
 
 
-# class ObjectPointer(BaseModel):
-#     obj_id: str = Field(..., description="id of existing object. Like box1, fiber2, circle1, etc.")
-#     port: Literal["portInput", "portOutput", "portLeft", "portRight"]
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        __core_schema: CoreSchema,
+        __handler):
+        schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
+        def remove_titles(d: dict):
+            d.pop('title', None)
+            for value in d.values():
+                if isinstance(value, dict):
+                    remove_titles(value)
 
-# class FiberPointer(BaseModel):
-#     fiber_id: str = Field(..., description="id of existing fiber object. Like fiber1, fiber2, etc.")
-#     port: Literal["portInput", "portOutput"]
+        schema.pop('title', None)
+        for prop in schema.get('properties', {}).values():
+            remove_titles(prop)
+
+        return schema
 
 
 config_setter = False
 
 
 # portOutput of box1 connects to portInput of 
-class Port(BaseModel):
+class Port(PModel):
     obj_id: str = Field(..., description="id of existing object . Like box1, fiber2, circle1, etc.")
     port: Literal["portInput", "portOutput"]
 
-class InterfaceFiber(BaseModel):
+    # @classmethod
+    # def __get_pydantic_json_schema__(
+    #     cls,
+    #     __core_schema: CoreSchema,
+    #     __handler):
+    #     schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
+    #     def remove_titles(d: dict):
+    #         d.pop('title', None)
+    #         for value in d.values():
+    #             if isinstance(value, dict):
+    #                 remove_titles(value)
+
+    #     schema.pop('title', None)
+    #     for prop in schema.get('properties', {}).values():
+    #         remove_titles(prop)
+
+    #     return schema
+
+class InterfaceFiber(PModel):
     t: Literal["InterfaceFiber"] = Field("InterfaceFiber")
     from_: Port
     to: Port
 
-    if config_setter:
-        model_config = ConfigDict(json_schema_extra={
-            # 't': 'InterfaceFiber',
-            'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object"})
-
+    # if config_setter:
+    model_config = ConfigDict(json_schema_extra={
+        # 't': 'InterfaceFiber',
+        'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object. Use the available Fiber object."})
+    
 
 class SuperNode:
     names: list[str] = []
@@ -60,11 +79,11 @@ class SuperNode:
         return []
 
 
-class Location(BaseModel):
+class Location(PModel):
     x: float
     y: float
 
-class Circle(BaseModel):
+class Circle(PModel):
     t: Literal["Circle"] = "Circle"
     name: Literal["circle", "oval", "ellipse", "ball", "ellipsoid", "sphere"] = "circle"
     id: str = Field(..., description="a unique id for the circle. Like circle1, circle2, etc.")
@@ -87,7 +106,7 @@ class SuperCircle(SuperNode):
         return [Circle]
 
 
-class Polygon(BaseModel):
+class Polygon(PModel):
     t: Literal["Polygon"] = "Polygon"
     name: Literal["polygon", "triangle", "pentagon", "hexagon", "octagon", "nonagon", "decagon", "dodecagon"] = "polygon"
     sides: int = Field(..., description="number of polygon sides. 3 is triangle, 5 is pentagon, etc.")
@@ -98,6 +117,7 @@ class Polygon(BaseModel):
     x: float
     y: float
     lineWidth: float = 0
+
 
     # model_config = ConfigDict(json_schema_extra={'t': 'Polygon'})
 
@@ -110,7 +130,7 @@ class SuperPolygon(SuperNode):
         return [Polygon]
 
 
-class Rect(BaseModel):
+class Rect(PModel):
     t: Literal["Rect"] = "Rect"
     name: Literal["rect", "square", "rectangle"] = "rect"
     id: str = Field(..., description="a unique id for the Rect. Like rect1, rect2, etc.")
@@ -121,6 +141,7 @@ class Rect(BaseModel):
     x: float
     y: float
     lineWidth: float = 0
+
 
     # model_config = ConfigDict(json_schema_extra={'t': 'Rect'})
 
@@ -133,11 +154,11 @@ class SuperRect(SuperNode):
     
 
 # only used by frontend for dependency resolution
-class FiberPort(BaseModel):
+class FiberPort(PModel):
     donate_position: bool
     donate_light: bool
 
-class Box(BaseModel):
+class Box(PModel):
     t: Literal["Box"] = "Box"
     id: str = Field(..., description="a unique id for the Box object. Like box1, box2, etc.")
     name: SkipJsonSchema[Literal["box", "object"]] = "box"
@@ -156,7 +177,8 @@ class Box(BaseModel):
             # 't': 'Box', 
             'available_ports': ["portInput", "portOutput"]})
     if not config_setter:
-        available_ports: Literal["portInput, portOutput"]
+        available_ports: Literal["portInput, portOutput"] = "portInput, portOutput"
+
 
     @classmethod
     def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
@@ -177,7 +199,7 @@ class SuperBox(SuperNode):
     def add_interface(self):
         return [InterfaceFiber]
     
-class Fiber(BaseModel):
+class Fiber(PModel):
     t: Literal["Fiber"] = "Fiber"
     name: SkipJsonSchema[Literal["fiber", "cable", "wire"]] = "fiber"
     id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
@@ -193,7 +215,78 @@ class Fiber(BaseModel):
             # 'notes': "Fiber is an OBJECT. Fiber is NOT an edge-like or interface-like entity. ",
             'available_ports': ["portInput", "portOutput"]})
     if not config_setter:
-        ports_available: Literal["portInput, portOutput"]
+        available_ports: Literal["portInput, portOutput"] = "portInput, portOutput"
+
+
+class SuperFiber(SuperNode):
+    names = ["fiber", "cable", "wire"]
+    def __init__(self):
+        pass
+    def model(self):
+        return [Fiber]
+    def add_interface(self):
+        return [InterfaceFiber]
+    
+
+
+class SuperLaser(SuperNode):
+    names = ["laser", "diode laser", "laser diode"]
+    def __init__(self):
+        pass
+    def model(self):
+        return [Laser]
+    def add_interface(self):
+        return [InterfaceFiber]
+    
+class Laser(PModel):
+    t: Literal["Laser"] = "Laser"
+    name: SkipJsonSchema[Literal["laser", "diode laser", "laser diode"]] = "laser"
+    x: float
+    y: float
+    width: float = 145
+    id: str = Field(..., description="a unique id. Like laser1, laser2, etc.")
+    on: bool = False
+
+    portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=True)
+
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            'available_ports': ["portOutput"]})
+    if not config_setter:
+        available_ports: Literal["portOutput"] = "portOutput"
+
+
+
+class SuperSwitch(SuperNode):
+    names = ["switch", "toggle", "modulator"]
+    def __init__(self):
+        pass
+    def model(self):
+        return [Switch, Fiber]
+    def add_interface(self):
+        return [InterfaceFiber]
+
+
+class Switch(PModel):
+    t: Literal["Switch"] = "Switch"
+    id: str = Field(..., description="a unique id for the Switch object. Like switch1, switch2, etc.")
+    name: SkipJsonSchema[Literal["switch", "controller", "toggle"]] = "switch"
+    width: float = 120
+    x: float
+    y: float
+    open: bool = Field(False, description="if switch is internally open or closed. Has no impact on connected ports")
+
+    # hidden
+    portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=False)
+    portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=True)
+
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': 'Box', 
+            'available_ports': ["portInput", "portOutput"]})
+    if not config_setter:
+        available_ports: Literal["portInput, portOutput"] = "portInput, portOutput"
+
 
     @classmethod
     def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
@@ -204,15 +297,40 @@ class Fiber(BaseModel):
             prop.pop('title', None)
 
         return schema
+    
 
-class SuperFiber(SuperNode):
-    names = ["fiber", "cable", "wire"]
+class SuperDetector(SuperNode):
+    names = ["detector", "photodetector", "photodiode"]
     def __init__(self):
         pass
     def model(self):
-        return [Fiber]
+        return [Detector, Fiber]
     def add_interface(self):
         return [InterfaceFiber]
+
+
+class Detector(PModel):
+    t: Literal["Detector"] = "Detector"
+    id: str = Field(..., description="a unique id for the Detector object. Like detector1, detector2, etc.")
+    name: SkipJsonSchema[Literal["detector", "photodetector", "photodiode"]] = "detector"
+    width: float = 110
+    x: float
+    y: float
+
+    # hidden
+    portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=False)
+    # portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=True, donate_light=True)
+
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': 'Box', 
+            'available_ports': ["portInput"]})
+    if not config_setter:
+        available_ports: Literal["portInput"] = "portInput"
+
+
+
+
 
 
 
