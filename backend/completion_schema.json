@@ -8,25 +8,20 @@
                     "enum": [
                         "Detector"
                     ],
-                    "title": "T",
                     "type": "string"
                 },
                 "id": {
                     "description": "a unique id for the Detector object. Like detector1, detector2, etc.",
-                    "title": "Id",
                     "type": "string"
                 },
                 "width": {
                     "default": 110,
-                    "title": "Width",
                     "type": "number"
                 },
                 "x": {
-                    "title": "X",
                     "type": "number"
                 },
                 "y": {
-                    "title": "Y",
                     "type": "number"
                 },
                 "available_ports": {
@@ -35,7 +30,6 @@
                     "enum": [
                         "portInput"
                     ],
-                    "title": "Available Ports",
                     "type": "string"
                 }
             },
@@ -44,7 +38,6 @@
                 "x",
                 "y"
             ],
-            "title": "Detector",
             "type": "object"
         },
         "Fiber": {
@@ -55,17 +48,14 @@
                     "enum": [
                         "Fiber"
                     ],
-                    "title": "T",
                     "type": "string"
                 },
                 "id": {
                     "description": "a unique id for the Fiber object. Like fiber1, fiber2, etc.",
-                    "title": "Id",
                     "type": "string"
                 },
                 "lineWidth": {
                     "default": 10,
-                    "title": "Linewidth",
                     "type": "number"
                 },
                 "available_ports": {
@@ -74,26 +64,21 @@
                     "enum": [
                         "portInput, portOutput"
                     ],
-                    "title": "Available Ports",
                     "type": "string"
                 }
             },
             "required": [
                 "id"
             ],
-            "title": "Fiber",
             "type": "object"
         },
         "InterfaceFiber": {
-            "instructions": "either _from.obj_id or to.obj_id MUST be a Fiber object. Use the available Fiber object.",
             "properties": {
                 "t": {
                     "const": "InterfaceFiber",
-                    "default": "InterfaceFiber",
                     "enum": [
                         "InterfaceFiber"
                     ],
-                    "title": "T",
                     "type": "string"
                 },
                 "from_": {
@@ -104,10 +89,10 @@
                 }
             },
             "required": [
+                "t",
                 "from_",
                 "to"
             ],
-            "title": "InterfaceFiber",
             "type": "object"
         },
         "Laser": {
@@ -118,30 +103,24 @@
                     "enum": [
                         "Laser"
                     ],
-                    "title": "T",
                     "type": "string"
                 },
                 "x": {
-                    "title": "X",
                     "type": "number"
                 },
                 "y": {
-                    "title": "Y",
                     "type": "number"
                 },
                 "width": {
                     "default": 145,
-                    "title": "Width",
                     "type": "number"
                 },
                 "id": {
                     "description": "a unique id. Like laser1, laser2, etc.",
-                    "title": "Id",
                     "type": "string"
                 },
                 "on": {
                     "default": false,
-                    "title": "On",
                     "type": "boolean"
                 },
                 "available_ports": {
@@ -150,7 +129,6 @@
                     "enum": [
                         "portOutput"
                     ],
-                    "title": "Available Ports",
                     "type": "string"
                 }
             },
@@ -159,22 +137,16 @@
                 "y",
                 "id"
             ],
-            "title": "Laser",
             "type": "object"
         },
         "Port": {
             "properties": {
                 "obj_id": {
                     "description": "id of existing object . Like box1, fiber2, circle1, etc.",
-                    "title": "Obj Id",
                     "type": "string"
                 },
                 "port": {
-                    "enum": [
-                        "portInput",
-                        "portOutput"
-                    ],
-                    "title": "Port",
+                    "description": "portInput, portOutput, ...",
                     "type": "string"
                 }
             },
@@ -182,7 +154,51 @@
                 "obj_id",
                 "port"
             ],
-            "title": "Port",
+            "type": "object"
+        },
+        "Switch": {
+            "properties": {
+                "t": {
+                    "const": "Switch",
+                    "default": "Switch",
+                    "enum": [
+                        "Switch"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "description": "a unique id for the Switch object. Like switch1, switch2, etc.",
+                    "type": "string"
+                },
+                "width": {
+                    "default": 120,
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "open": {
+                    "default": false,
+                    "description": "if switch is internally open or closed. Has no impact on connected ports",
+                    "type": "boolean"
+                },
+                "available_ports": {
+                    "const": "portInput, portOutput",
+                    "default": "portInput, portOutput",
+                    "enum": [
+                        "portInput, portOutput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "x",
+                "y"
+            ],
             "type": "object"
         }
     },
@@ -193,7 +209,8 @@
                     "mapping": {
                         "Detector": "#/$defs/Detector",
                         "Fiber": "#/$defs/Fiber",
-                        "Laser": "#/$defs/Laser"
+                        "Laser": "#/$defs/Laser",
+                        "Switch": "#/$defs/Switch"
                     },
                     "propertyName": "t"
                 },
@@ -206,6 +223,9 @@
                     },
                     {
                         "$ref": "#/$defs/Laser"
+                    },
+                    {
+                        "$ref": "#/$defs/Switch"
                     }
                 ]
             },

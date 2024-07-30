@@ -262,7 +262,7 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     # InterfaceLight must connect to an object with name Light.
 
     # You MUST include object <name> if you also include Interface<name> in the scene.
-
+    # print(ReturnType.model_json_schema())
 
     prompt = f"""
     
@@ -282,30 +282,30 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
 
     print("USING SCENE MODEL: ", scene_model.model)
 
-    try:
-        user, completion = scene_model.client.chat.completions.create_with_completion(
-            model=scene_model.model,
-            # model="gpt-4o",
-            # model="gpt-4o-mini",
-            # model="llama3-groq-70b-8192-tool-use-preview",
-            # model="llama-3.1-70b-versatile",
-            # model="llama-3.1-8b-instant",
-            # model="llama3-groq-8b-8192-tool-use-preview",
-            # model="mixtral-8x7b-32768",
-            # max_tokens = 2000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            response_model=ReturnType,
-        )
+    # try:
+    user, completion = scene_model.client.chat.completions.create_with_completion(
+        model=scene_model.model,
+        # model="gpt-4o",
+        # model="gpt-4o-mini",
+        # model="llama3-groq-70b-8192-tool-use-preview",
+        # model="llama-3.1-70b-versatile",
+        # model="llama-3.1-8b-instant",
+        # model="llama3-groq-8b-8192-tool-use-preview",
+        # model="mixtral-8x7b-32768",
+        # max_tokens = 2000,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        response_model=ReturnType,
+    )
 
-    except Exception as e:
-            # general exception handling
-            logger.error("ERROR: %s", e)
-            return None
+    # except Exception as e:
+    #         # general exception handling
+    #         logger.error("ERROR: %s", e)
+    #         return None
     
 
     # print("completion: ", completion.model_dump_json())
@@ -350,6 +350,9 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     pretty_json = json.dumps(json.loads(completion_model.model_dump_json()), indent=4)
     with open("completion.json", "w") as f:
         f.write(pretty_json)
+
+
+    print("COMPLETION: ", completion_model)
 
     
 

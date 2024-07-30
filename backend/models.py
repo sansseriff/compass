@@ -11,24 +11,24 @@ from pydantic_core import CoreSchema
 
 class PModel(BaseModel):
 
-    pass
-    # @classmethod
-    # def __get_pydantic_json_schema__(
-    #     cls,
-    #     __core_schema: CoreSchema,
-    #     __handler):
-    #     schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
-    #     def remove_titles(d: dict):
-    #         d.pop('title', None)
-    #         for value in d.values():
-    #             if isinstance(value, dict):
-    #                 remove_titles(value)
+    # pass
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        __core_schema: CoreSchema,
+        __handler):
+        schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
+        def remove_titles(d: dict):
+            d.pop('title', None)
+            for value in d.values():
+                if isinstance(value, dict):
+                    remove_titles(value)
 
-    #     schema.pop('title', None)
-    #     for prop in schema.get('properties', {}).values():
-    #         remove_titles(prop)
+        schema.pop('title', None)
+        for prop in schema.get('properties', {}).values():
+            remove_titles(prop)
 
-    #     return schema
+        return schema
 
 
 config_setter = False
@@ -37,7 +37,13 @@ config_setter = False
 # portOutput of box1 connects to portInput of 
 class Port(PModel):
     obj_id: str = Field(..., description="id of existing object . Like box1, fiber2, circle1, etc.")
-    port: Literal["portInput", "portOutput"]
+    # super weird error that appeared over night: I can't use a 
+    # Literal["portInput", "portOutput"] here. It throws an error with openai specifically
+    port: str = Field(..., description="portInput, portOutput, ...")
+    
+    # Literal["portInput", "portOutput"] = "portInput"
+
+    
 
     # @classmethod
     # def __get_pydantic_json_schema__(
@@ -58,14 +64,14 @@ class Port(PModel):
     #     return schema
 
 class InterfaceFiber(PModel):
-    t: Literal["InterfaceFiber"] = Field("InterfaceFiber")
+    t: Literal["InterfaceFiber"] #= Field("InterfaceFiber")
     from_: Port
     to: Port
 
-    # if config_setter:
-    model_config = ConfigDict(json_schema_extra={
-        # 't': 'InterfaceFiber',
-        'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object. Use the available Fiber object."})
+    # # if config_setter:
+    # model_config = ConfigDict(json_schema_extra={
+    #     # 't': 'InterfaceFiber',
+    #     'instructions': "either _from.obj_id or to.obj_id MUST be a Fiber object. Use the available Fiber object."})
     
 
 class SuperNode:

@@ -1,33 +1,64 @@
 {
     "objects": [
         {
-            "id": "laser1",
             "t": "Laser",
-            "x": 0,
+            "x": -100,
             "y": 0,
-            "available_ports": "portOutput",
+            "id": "laser1",
             "on": true
         },
         {
-            "id": "detector1",
             "t": "Detector",
             "x": 100,
             "y": 0,
-            "available_ports": "portInput",
-            "width": 110
+            "id": "detector1"
+        },
+        {
+            "t": "Fiber",
+            "x": 0,
+            "y": 0,
+            "id": "fiber1"
+        },
+        {
+            "t": "Switch",
+            "x": 0,
+            "y": -100,
+            "id": "switch1"
         }
     ],
     "interfaces": [
         {
+            "t": "InterfaceFiber",
             "from_": {
                 "obj_id": "laser1",
                 "port": "portOutput"
             },
             "to": {
+                "obj_id": "fiber1",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "fiber1",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "switch1",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "switch1",
+                "port": "portOutput"
+            },
+            "to": {
                 "obj_id": "detector1",
                 "port": "portInput"
-            },
-            "t": "InterfaceFiber"
+            }
         }
     ]
 }
