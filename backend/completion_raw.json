@@ -1,47 +1,66 @@
 {
     "objects": [
         {
-            "t": "Laser",
-            "x": -100,
-            "y": 0,
-            "id": "laser1",
-            "on": true
-        },
-        {
-            "t": "Detector",
-            "x": 100,
-            "y": 0,
-            "id": "detector1"
+            "t": "Box",
+            "id": "box1",
+            "x": -200,
+            "y": 0
         },
         {
             "t": "Fiber",
-            "x": 0,
-            "y": 0,
-            "id": "fiber1"
+            "id": "fiber1a"
         },
         {
             "t": "Switch",
+            "id": "switch1",
             "x": 0,
-            "y": -100,
-            "id": "switch1"
+            "y": 0
+        },
+        {
+            "t": "Fiber",
+            "id": "fiber1b"
+        },
+        {
+            "t": "Detector",
+            "id": "detector1",
+            "x": 200,
+            "y": 0
+        },
+        {
+            "t": "Polygon",
+            "id": "polygon1",
+            "sides": 3,
+            "fill": "red",
+            "x": -300,
+            "y": -200
+        },
+        {
+            "t": "Polygon",
+            "id": "coolshape1",
+            "sides": 6,
+            "lineWidth": 5,
+            "stroke": "blue",
+            "fill": "yellow",
+            "x": 300,
+            "y": 200
         }
     ],
     "interfaces": [
         {
             "t": "InterfaceFiber",
             "from_": {
-                "obj_id": "laser1",
+                "obj_id": "box1",
                 "port": "portOutput"
             },
             "to": {
-                "obj_id": "fiber1",
+                "obj_id": "fiber1a",
                 "port": "portInput"
             }
         },
         {
             "t": "InterfaceFiber",
             "from_": {
-                "obj_id": "fiber1",
+                "obj_id": "fiber1a",
                 "port": "portOutput"
             },
             "to": {
@@ -53,6 +72,17 @@
             "t": "InterfaceFiber",
             "from_": {
                 "obj_id": "switch1",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "fiber1b",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "fiber1b",
                 "port": "portOutput"
             },
             "to": {

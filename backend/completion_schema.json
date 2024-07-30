@@ -1,5 +1,53 @@
 {
     "$defs": {
+        "Box": {
+            "properties": {
+                "t": {
+                    "const": "Box",
+                    "default": "Box",
+                    "enum": [
+                        "Box"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "description": "a unique id for the Box object. Like box1, box2, etc.",
+                    "type": "string"
+                },
+                "width": {
+                    "default": 150,
+                    "type": "number"
+                },
+                "height": {
+                    "default": 75,
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                },
+                "fill": {
+                    "default": "gray",
+                    "type": "string"
+                },
+                "available_ports": {
+                    "const": "portInput, portOutput",
+                    "default": "portInput, portOutput",
+                    "enum": [
+                        "portInput, portOutput"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "x",
+                "y"
+            ],
+            "type": "object"
+        },
         "Detector": {
             "properties": {
                 "t": {
@@ -95,15 +143,49 @@
             ],
             "type": "object"
         },
-        "Laser": {
+        "Polygon": {
             "properties": {
                 "t": {
-                    "const": "Laser",
-                    "default": "Laser",
+                    "const": "Polygon",
+                    "default": "Polygon",
                     "enum": [
-                        "Laser"
+                        "Polygon"
                     ],
                     "type": "string"
+                },
+                "name": {
+                    "default": "polygon",
+                    "enum": [
+                        "polygon",
+                        "triangle",
+                        "pentagon",
+                        "hexagon",
+                        "octagon",
+                        "nonagon",
+                        "decagon",
+                        "dodecagon"
+                    ],
+                    "type": "string"
+                },
+                "sides": {
+                    "description": "number of polygon sides. 3 is triangle, 5 is pentagon, etc.",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "a unique id for the Polygon. Like poly1, poly2, etc.",
+                    "type": "string"
+                },
+                "fill": {
+                    "default": "gray",
+                    "type": "string"
+                },
+                "stroke": {
+                    "default": "gray",
+                    "type": "string"
+                },
+                "size": {
+                    "default": 50,
+                    "type": "number"
                 },
                 "x": {
                     "type": "number"
@@ -111,31 +193,16 @@
                 "y": {
                     "type": "number"
                 },
-                "width": {
-                    "default": 145,
+                "lineWidth": {
+                    "default": 0,
                     "type": "number"
-                },
-                "id": {
-                    "description": "a unique id. Like laser1, laser2, etc.",
-                    "type": "string"
-                },
-                "on": {
-                    "default": false,
-                    "type": "boolean"
-                },
-                "available_ports": {
-                    "const": "portOutput",
-                    "default": "portOutput",
-                    "enum": [
-                        "portOutput"
-                    ],
-                    "type": "string"
                 }
             },
             "required": [
+                "sides",
+                "id",
                 "x",
-                "y",
-                "id"
+                "y"
             ],
             "type": "object"
         },
@@ -207,22 +274,26 @@
             "items": {
                 "discriminator": {
                     "mapping": {
+                        "Box": "#/$defs/Box",
                         "Detector": "#/$defs/Detector",
                         "Fiber": "#/$defs/Fiber",
-                        "Laser": "#/$defs/Laser",
+                        "Polygon": "#/$defs/Polygon",
                         "Switch": "#/$defs/Switch"
                     },
                     "propertyName": "t"
                 },
                 "oneOf": [
                     {
-                        "$ref": "#/$defs/Detector"
+                        "$ref": "#/$defs/Box"
                     },
                     {
                         "$ref": "#/$defs/Fiber"
                     },
                     {
-                        "$ref": "#/$defs/Laser"
+                        "$ref": "#/$defs/Detector"
+                    },
+                    {
+                        "$ref": "#/$defs/Polygon"
                     },
                     {
                         "$ref": "#/$defs/Switch"
