@@ -6,10 +6,11 @@ import type {
   ThreadGeneratorFactory,
 } from "@motion-canvas/core";
 
-import { all, Vector2 } from "@motion-canvas/core";
+import { all, Vector2, map, tween } from "@motion-canvas/core";
 
 import { Box } from "./nodes/Box";
 import { Fiber } from "./nodes/Fiber";
+import { FiberAnimated } from "./nodes/FiberAnimated";
 import { Laser } from "./nodes/Laser";
 import { Switch } from "./nodes/Switch";
 import { Detector } from "./nodes/Detector";
@@ -21,6 +22,8 @@ import type {
   InterfaceWireProps,
   InterfaceFiberProps,
 } from "./node_interface/FiberInterface";
+
+import { loop } from "@motion-canvas/core/lib/flow";
 
 import { globalRefs } from "./global_ref"
 
@@ -43,7 +46,7 @@ registerObject("Circle", Circle);
 registerObject("Line", Line);
 registerObject("Polygon", Polygon);
 registerObject("Box", Box);
-registerObject("Fiber", Fiber);
+registerObject("Fiber", FiberAnimated);
 registerObject("Laser", Laser);
 registerObject("Switch", Switch);
 registerObject("Detector", Detector);
@@ -103,7 +106,7 @@ export function createSceneFromText(
     const Description = makeScene2D(function* (view) {
       try {
         // using try/catch because I think motion-canvas usually pipes errors differently
-        console.log("do you get here?");
+        // console.log("do you get here?");
         // const node_interfaces = jsonData.interfaces?.map((data) => {
         //   const node_interface = createInterface(data);
         //   return node_interface;
@@ -146,16 +149,16 @@ export function createSceneFromText(
                 to_store.port = node_interface.to.port;
               }
             }
-            console.log(
-              "this is the donator store: ",
-              from_store,
-              nodes[from_store.index]
-            );
-            console.log(
-              "this is the acceptor store: ",
-              to_store,
-              nodes[to_store.index]
-            );
+            // console.log(
+            //   "this is the donator store: ",
+            //   from_store,
+            //   nodes[from_store.index]
+            // );
+            // console.log(
+            //   "this is the acceptor store: ",
+            //   to_store,
+            //   nodes[to_store.index]
+            // );
 
 
             const port_from_instruction: FiberPort = (jsonData.objects[from_store.index] as any)[portTypeKey_from];
@@ -166,32 +169,40 @@ export function createSceneFromText(
             // console.log("nodes: ", nodes);
 
 
-            console.log("trying to get the ", from_store.port, " port from ", nodes[from_store.index]);
+            // console.log("from store: trying to get the ", from_store.port, " port from ", nodes[from_store.index]);
+            // console.log("this is the from store: ", from_store)
             const port_from: Connection = (nodes[from_store.index] as any)[from_store.port];
 
-            if (nodes[from_store.index] == undefined || nodes[to_store.index] == undefined) {
-              console.log("remember to add to registry!")
-            }
+            // if (nodes[from_store.index] == undefined || nodes[to_store.index] == undefined) {
+            //   console.log("remember to add to registry!")
+            // }
 
-            console.log("trying to get the ", to_store.port, " port from ", nodes[to_store.index]);
-            console.log("the node idx is ", to_store.index, "and the length is", nodes.length);
+            // console.log("to store: trying to get the ", to_store.port, " port from ", nodes[to_store.index]);
+            // console.log("this is the to store: ", to_store)
+            // console.log("the node idx is ", to_store.index, "and the length is", nodes.length);
             const port_to: Connection = (nodes[to_store.index] as any)[to_store.port];
 
 
             // if the "from" port donates a signal and the "to" port does not, then give the "to" port the signal from the "from" port
-            if (port_from_instruction.donate_position && !port_to_instruction.donate_position) {
-              port_to.position = port_from.position;
+            try {
+              if (port_from_instruction.donate_position && !port_to_instruction.donate_position) {
+                port_to.position = port_from.position;
+              }
+              else if (!port_from_instruction.donate_position && port_to_instruction.donate_position) {
+                port_from.position = port_to.position;
+              }
+  
+              if (port_from_instruction.donate_light && !port_to_instruction.donate_light) {
+                port_to.light = port_from.light;
+              }
+              else if (!port_from_instruction.donate_light && port_to_instruction.donate_light) {
+                port_from.light = port_to.light;
+              }
             }
-            else if (!port_from_instruction.donate_position && port_to_instruction.donate_position) {
-              port_from.position = port_to.position;
+            catch (e) {
+              console.log("error: ", e);
             }
-
-            if (port_from_instruction.donate_light && !port_to_instruction.donate_light) {
-              port_to.light = port_from.light;
-            }
-            else if (!port_from_instruction.donate_light && port_to_instruction.donate_light) {
-              port_from.light = port_to.light;
-            }
+            
 
             // give the acceptor the signal from the donator
             // (nodes[from_store.index] as any)[acceptor_store.port] = (
@@ -242,16 +253,39 @@ export function createSceneFromText(
         });
 
         view.add(top_node);
-        console.log(nodes);
+        // console.log(nodes);
 
-        globalRefs.laser = nodes[0];
+        // globalRefs.laser = nodes[0];
 
+        globalRefs.nodes = nodes;
+
+        // yield* all(
+        //   // nodes[0].position(nodes[0]?.position().add(new Vector2(0,50)), 2).to(nodes[0]?.position().add(new Vector2(0,-50)), 2).to(nodes[0]?.position().add(new Vector2(0,0)), 2),
+
+        const yieldable = nodes.filter((node) => node.constructor.name === "FiberAnimated").map((node) => loop(60,() => node.runFiber(2)));
+
+        // console.log("this is the yieldable: ", yieldable);
+
+        console.log(" this might be fiber progres: ", nodes[2]?.progress);
+
+        // find with of the nodes has a "progress" signal:
+        const progress_node = nodes.find((node) => node.progress !== undefined);
+
+
+        // yield* all(...yieldable);
         yield* all(
-          // nodes[0].position(nodes[0]?.position().add(new Vector2(0,50)), 2).to(nodes[0]?.position().add(new Vector2(0,-50)), 2).to(nodes[0]?.position().add(new Vector2(0,0)), 2),
-          nodes[0].rotation(7, .5).to(-7, .5).to(0, .5),
-          // nodes[1].position(nodes[1]?.position().add(new Vector2(0,50)), 2).to(nodes[1]?.position().add(new Vector2(0,-50)), 2).to(nodes[1]?.position().add(new Vector2(0,0)), 2),
-          nodes[1].rotation(7, .5).to(-7, .5).to(0, .5),
+        // yield * node[1].runFiber(2);
+        // yield * node[0].rotation(0, 20).to(-7, .5).to(0, .5);
+          // yield* nodes[0].rotation(0, 20)
+          // .to(-7, .5).to(0, .5),
+          // nodes[0].scale(2, 2),
+          // progress_node?.progress(0, 2).to(1, 2).to(0, 2),
+          ...yieldable,
+          // loop(20, () => progress_node.runFiber(2)),
+          // nodes[1].rotation(7, .5).to(-7, .5).to(0, .5),
+          // loop(Infinity, () => {nodes[0].rotation(7, .5).to(-7, .5)})
         );
+        // yield loop(Infinity, () => {notes[0].rotation(7, .5).to(-7, .5)});
       } catch (e) {
         console.log("error: ", e);
       }

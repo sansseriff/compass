@@ -1,4 +1,5 @@
+import { Node } from "@motion-canvas/2d";
+
 export const globalRefs = {
-    laser: null,
-    switch_element: null,
-  };
+  nodes: Array<Node>(),
+};

@@ -209,7 +209,7 @@ class Fiber(PModel):
     t: Literal["Fiber"] = "Fiber"
     name: SkipJsonSchema[Literal["fiber", "cable", "wire"]] = "fiber"
     id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
-    lineWidth: float = 10
+    lineWidth: float = 7
 
     # hidden
     portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=False)

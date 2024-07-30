@@ -292,7 +292,7 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
         # model="llama-3.1-8b-instant",
         # model="llama3-groq-8b-8192-tool-use-preview",
         # model="mixtral-8x7b-32768",
-        # max_tokens = 2000,
+        max_tokens = 3000,
         messages=[
             {
                 "role": "user",
@@ -411,6 +411,10 @@ def set_scene_model(request: ModelRequest):
         scene_model.model = model_str
         scene_model.client = client_anthropic
 
+    elif model_str == "llama-3.1-70b-versatile":
+        scene_model.model = model_str
+        scene_model.client = client_groq
+
 
 @app.post("/set-decoder-model")
 def set_decoder_model(request: ModelRequest):
@@ -441,6 +445,10 @@ def set_decoder_model(request: ModelRequest):
     elif model_str == "claude-3-5-sonnet-20240620":
         decoder_model.model = model_str
         decoder_model.client = client_anthropic
+
+    elif model_str == "llama-3.1-70b-versatile":
+        scene_model.model = model_str
+        scene_model.client = client_groq
 
     
 

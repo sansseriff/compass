@@ -2,6 +2,8 @@ import './app.css'
 import App from './App.svelte'
 import { mount } from 'svelte';
 
+import { globalRefs } from './global_ref';
+
 // const app = new App({
 //   target: document.getElementById('app'),
 // })

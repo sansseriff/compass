@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {
-    Player as PlayerTyp,
+    Player as PlayerType,
     FullSceneDescription,
     ThreadGeneratorFactory,
   } from "@motion-canvas/core";
@@ -12,6 +12,7 @@
     Node,
     Spline,
     Knot,
+    Txt
   } from "@motion-canvas/2d";
   import PreloadingIndicator from "./PreloadingIndicator.svelte";
 
@@ -46,6 +47,7 @@
   import { Laser } from "./nodes/Laser";
   import { Switch } from "./nodes/Switch";
   import { Detector } from "./nodes/Detector";
+  import { Compass } from "./nodes/Compass";
 
   import logo from "./assets/logo.svg";
 
@@ -65,10 +67,9 @@
 
   let variables = { circleFill: "red" };
 
-  import { globalRefs } from "./global_ref"
+  import { globalRefs } from "./global_ref";
 
   // Global object to store references
-  
 
   // function createInitialScene(scale_factor = 1) {
   //   const Description = makeScene2D(function* (view) {
@@ -114,6 +115,9 @@
         //   fill: "#e13238",
         // });
 
+        const compass = new Compass({x: 0, y: 0, opacity: 0.4})
+        // const text = new Txt({x: 0, y: 110, text: "Compass", fill: "#b7b6cc", fontFamily: "Arial", fontSize: 38})
+
         // const circle = new Circle({
         //   position: () => box.portOutput.position(),
         //   width: 30,
@@ -122,20 +126,22 @@
         //   scale: 1,
         // });
 
-        const laser = new Laser({ x: 0, y: 0 });
-        const switch_element = new Switch({ x: 100, y: 0, open: false });
-        const detector = new Detector({ x: 200, y: 0 });
+        // const laser = new Laser({ x: 0, y: 0 });
+        // const switch_element = new Switch({ x: 100, y: 0, open: false });
+        // const detector = new Detector({ x: 200, y: 0 });
 
-        // Store references in the global object
-        globalRefs.laser = laser;
-        globalRefs.switch_element = switch_element;
+        // // Store references in the global object
+        // globalRefs.laser = laser;
+        // globalRefs.switch_element = switch_element;
 
-        view.add([laser, switch_element, detector]);
-
-        yield* laser
-          .position(new Vector2(-100, 0), 1)
-          .to(new Vector2(100, 0), 1);
+        // view.add([laser, switch_element, detector]);
+        view.add(compass);
+        // yield* laser
+        //   .position(new Vector2(-100, 0), 1)
+        //   .to(new Vector2(100, 0), 1);
         // );
+
+        yield* compass.scale(1.1, 1).to(0.9, 1).to(1.1, 1).to(0.9, 1).to(1.1, 1).to(0.9, 1).to(1.1, 1).to(0.9, 1).to(1,0.5);
       });
 
       return Description as FullSceneDescription<
@@ -174,6 +180,13 @@
       // const scene = createScene(canvas_width / 960);
       player = borrowPlayer(previewRef, player, canvas_width);
       updatePlayer(currentSceneScalable(canvas_width / 960));
+
+      console.log("this should be scaling")
+      scaled_boxes = getScaledBoxes();
+      
+
+      const rect = previewRef.getBoundingClientRect();
+      previewCoordinates = { x: rect.left, y: rect.top };
     }
 
     function onMouseUp() {
@@ -183,11 +196,20 @@
 
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+
+    scaled_boxes = getScaledBoxes();
+
+    const rect = previewRef.getBoundingClientRect();
+    previewCoordinates = { x: rect.left, y: rect.top };
   }
 
   function handleText(event) {
+    
+    console.log("finised clearing nodes")
     inputText = event.target.value;
     if (event.shiftKey && event.key === "Enter") {
+      boxes = [];
+      globalRefs.nodes = [];
       event.preventDefault(); // Prevent the default action to avoid a new line in the textarea
       console.log("Sending textarea content to server:", inputText);
       const wordCount = inputText.split(/\s+/).filter(Boolean).length;
@@ -202,6 +224,22 @@
         // console.log("scene: ", scene);
         updatePlayer(currentSceneScalable(canvas_width / 960));
         loading = false;
+
+        setTimeout(() => {
+          globalRefs.nodes.forEach((node, index) => {
+            console.log("starting with box: ", node);
+            if (node.constructor.name !== "Fiber") {
+              console.log("node name: ", node.constructor.name);
+              if (node.width) {
+                boxes.push({ x: node.x() + 960/2 - node.width()/2, y: node.y() + 960/4 - node.width()*0.65*0.5, width: node.width(), idx: index});
+                // boxes.push({x: 0, y: 0, width: 100});
+              }
+              // boxes.push({ x: node.x(), y: node.y(), width:  });
+            }
+          });
+          scaled_boxes = getScaledBoxes();
+          console.log("boxes: ", boxes);
+        }, 100);
       });
     }
   }
@@ -221,6 +259,7 @@
     "llama3-groq-8b-8192-tool-use-preview",
     "mixtral-8x7b-32768",
     "claude-3-5-sonnet-20240620",
+    "llama-3.1-70b-versatile"
   ];
 
   function handleSceneModelChange(event) {
@@ -234,17 +273,34 @@
     setDecoderModel(decoderModel);
   }
 
+  let previewCoordinates = $state({ x: 0, y: 0 });
+
   onMount(() => {
     init();
     handleDecoderModelChange({ target: { value: decoderModel } });
     handleSceneModelChange({ target: { value: sceneModel } });
+    startDrag({ clientX: document.body.clientWidth / 2 });
+    const rect = previewRef.getBoundingClientRect();
+    previewCoordinates = { x: rect.left, y: rect.top };
+    player.togglePlayback()
+    // player?.playback.onSceneChanged(() => )
+    console.log("playback: ", player.playback.state)
+
+    // setTimeout(() => {
+    //   window.removeEventListener("mousemove", onMouseMove);
+    //   window.removeEventListener("mouseup", onMouseUp);
+    // }, 1);
+
   });
 
-  let boxes = [
-    { x: 0, y: 0, width: 50, height: 50 },
-    { x: 200, y: 150, width: 150, height: 150 },
-    // Add more boxes as needed
-  ];
+  interface BBox {
+    x: number;
+    y: number;
+    width: number;
+    // height: number;
+    idx: number;
+  }
+  let boxes: Array<BBox> = [];
 
   function getScaledBoxes() {
     const scale = canvas_width / 960;
@@ -253,13 +309,14 @@
       x: Math.floor(box.x * scale),
       y: Math.floor(box.y * scale),
       width: Math.floor(box.width * scale),
-      height: Math.floor(box.height * scale),
+      // height: Math.floor(box.height * scale),
+      idx: box.idx,
     }));
   }
 
-  let scaled_boxes = $derived.by(() => getScaledBoxes())
+  let scaled_boxes: Array<BBox> = $state();
 
-
+  // let scaled_boxes = $derived.by(() => getScaledBoxes());
 </script>
 
 <div class="container">
@@ -332,16 +389,18 @@
         </div>
         <div class="draggable-container">
           {#each scaled_boxes as scaled_box}
-            <DraggableBox {...scaled_box} />
+            <DraggableBox {...scaled_box} scalar={canvas_width/960} />
           {/each}
         </div>
         <!-- </div> -->
       </div>
 
-      <button class="button" onclick={() => { globalRefs.laser.on(true); 
-        player.togglePlayback();
-        } }
-        >toggle playback</button
+      <button
+        class="button"
+        onclick={() => {
+          // globalRefs.nodes[0].on(true);
+          player.togglePlayback();
+        }}>toggle playback</button
       >
 
       <!-- <button class="button" onclick={() => {variables.circleFill = colors[Math.floor(Math.random() * 6)]}}>Change to Green</button> -->
@@ -364,7 +423,7 @@
   }
 
   .together {
-    position: relative
+    position: relative;
   }
 
   .container {
