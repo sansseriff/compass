@@ -55,7 +55,7 @@
                     "type": "string"
                 },
                 "lineWidth": {
-                    "default": 7,
+                    "default": 2,
                     "type": "number"
                 },
                 "available_ports": {

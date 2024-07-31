@@ -95,8 +95,8 @@ class Circle(PModel):
     id: str = Field(..., description="a unique id for the circle. Like circle1, circle2, etc.")
     size: float = 50
     fill: str = "gray"
-    stroke: str = "gray"
-    lineWidth: float = 0
+    stroke: str = Field("gray", description="color of stroke, edge, or border")
+    lineWidth: float = Field(0, description="width of stroke, edge, or border. 0 means no border")
     x: float
     y: float
 
@@ -118,11 +118,11 @@ class Polygon(PModel):
     sides: int = Field(..., description="number of polygon sides. 3 is triangle, 5 is pentagon, etc.")
     id: str = Field(..., description="a unique id for the Polygon. Like poly1, poly2, etc.")
     fill: str = "gray"
-    stroke: str = "gray"
+    stroke: str = Field("gray", description="color of stroke, edge, or border")
     size: float = 50
     x: float
     y: float
-    lineWidth: float = 0
+    lineWidth: float = Field(0, description="width of stroke, edge, or border")
 
 
     # model_config = ConfigDict(json_schema_extra={'t': 'Polygon'})
@@ -143,10 +143,10 @@ class Rect(PModel):
     width: float = 50
     height: float = 50
     fill: str = "gray"
-    stroke: str = "gray"
+    stroke: str = Field("gray", description="color of stroke, edge, or border")
     x: float
     y: float
-    lineWidth: float = 0
+    lineWidth: float = Field(0, description="width of stroke, edge, or border")
 
 
     # model_config = ConfigDict(json_schema_extra={'t': 'Rect'})
@@ -209,7 +209,7 @@ class Fiber(PModel):
     t: Literal["Fiber"] = "Fiber"
     name: SkipJsonSchema[Literal["fiber", "cable", "wire"]] = "fiber"
     id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
-    lineWidth: float = 7
+    lineWidth: float = 2
 
     # hidden
     portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=False)

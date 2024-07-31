@@ -215,6 +215,20 @@
       const wordCount = inputText.split(/\s+/).filter(Boolean).length;
       loading = true;
       time_scalar = Math.round((wordCount / 10) * 10) / 10;
+
+      if (sceneModel === "gpt-4o") {
+        time_scalar = time_scalar * 1.6;
+      }
+
+      if (sceneModel === "claude-3-5-sonnet-20240620") {
+        time_scalar = time_scalar * 3.8;
+      }
+
+      if (sceneModel === "gpt-4o-mini") {
+        time_scalar = time_scalar * 1.45;
+      }
+
+
       console.log("time_scalar: ", time_scalar);
 
       getScene(inputText).then((response) => {
@@ -282,9 +296,11 @@
     startDrag({ clientX: document.body.clientWidth / 2 });
     const rect = previewRef.getBoundingClientRect();
     previewCoordinates = { x: rect.left, y: rect.top };
-    player.togglePlayback()
+
+    setTimeout(() => player?.togglePlayback(), 200)
+    // player.togglePlayback()
     // player?.playback.onSceneChanged(() => )
-    console.log("playback: ", player.playback.state)
+    // console.log("playback: ", player.playback.state)
 
     // setTimeout(() => {
     //   window.removeEventListener("mousemove", onMouseMove);

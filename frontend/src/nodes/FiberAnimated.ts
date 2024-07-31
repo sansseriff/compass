@@ -38,6 +38,9 @@ export class FiberAnimated extends Node {
   private knot_1: Knot;
   private knot_2: Knot;
 
+  private knot_1a: Knot;
+  private knot_2a: Knot;
+
   public declare readonly progress: SimpleSignal<number>;
 //   private sp: Spline;
 
@@ -60,14 +63,21 @@ export class FiberAnimated extends Node {
     // console.log("adding spline details")
     // console.log("and this is the port input signal: ", this.portInput.position())
 
-    this.knot_2 = new Knot({ startHandle: [-100, 0] });
-    this.knot_1 = new Knot({ startHandle: [-100, 0] });
+    this.knot_1 = new Knot({ startHandle: [-120, 0] });
+    this.knot_2 = new Knot({ startHandle: [-120, 0] });
+
+    this.knot_1a = new Knot({ startHandle: [-120, 0] });
+    this.knot_2a = new Knot({ startHandle: [-120, 0] });
+    
     
 
     this.progress = createSignal(0);
 
     this.knot_1.absolutePosition(() => this.portInput.position());
     this.knot_2.absolutePosition(() => this.portOutput.position());
+
+    this.knot_1a.absolutePosition(() => this.portInput.position().add(new Vector2(0, 1)));
+    this.knot_2a.absolutePosition(() => this.portOutput.position().add(new Vector2(0, 1)));
 
     const polygonCount = 16; // Example: 5 polygons
     const polygons = Array.from(
@@ -85,13 +95,30 @@ export class FiberAnimated extends Node {
 
 
     const spline = new Spline({
-        lineWidth: 15,
-        stroke: "lightseagreen",
+        lineWidth: 10,
+        stroke: "orange",
+        shadowColor: {a: 0.30, r: 0, g: 0, b: 0},
+        shadowOffset: new Vector2(-2, 2),
+        shadowBlur: 4,
         children: [
-          this.knot_1,
-          this.knot_2,
+          this.knot_1a,
+          this.knot_2a,
         ],
       })
+
+    const highlight_spline = new Spline({
+      lineWidth: 7,
+      stroke: "white",
+      opacity: 0.42,
+      compositeOperation: "lighten",
+      children: [
+        this.knot_1,
+        this.knot_2,
+      ],
+    })
+
+
+    highlight_spline.filters.blur(3);
 
     const list_of_moving_objects = polygons.map((offset, index) => {
         return new Node({children: [
@@ -121,7 +148,7 @@ export class FiberAnimated extends Node {
       cache: true,
       children: [
         spline,
-        ...list_of_moving_objects],
+        ...list_of_moving_objects, highlight_spline],
     });
     this.add(top_node);
   }

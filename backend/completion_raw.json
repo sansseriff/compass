@@ -1,31 +1,30 @@
 {
     "objects": [
         {
-            "id": "laser1",
             "t": "Laser",
-            "x": -350,
+            "id": "laser1",
+            "x": -300,
             "y": 0,
             "on": true
         },
         {
-            "id": "switch1",
+            "t": "Fiber",
+            "id": "fiber1"
+        },
+        {
             "t": "Switch",
+            "id": "switch1",
             "x": 0,
-            "y": 0,
-            "open": false
+            "y": 0
         },
         {
-            "id": "fiber1",
-            "t": "Fiber"
+            "t": "Fiber",
+            "id": "fiber2"
         },
         {
-            "id": "fiber2",
-            "t": "Fiber"
-        },
-        {
-            "id": "detector1",
             "t": "Detector",
-            "x": 350,
+            "id": "detector1",
+            "x": 300,
             "y": 0
         }
     ],

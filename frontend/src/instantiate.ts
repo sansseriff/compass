@@ -257,6 +257,8 @@ export function createSceneFromText(
 
         // globalRefs.laser = nodes[0];
 
+        console.log("adding to global refs. ");
+
         globalRefs.nodes = nodes;
 
         // yield* all(
@@ -264,12 +266,16 @@ export function createSceneFromText(
 
         const yieldable = nodes.filter((node) => node.constructor.name === "FiberAnimated").map((node) => loop(60,() => node.runFiber(2)));
 
+        if (yieldable.length === 0) {
+          yield * nodes[0]?.rotation(0,100);
+        }
+
         // console.log("this is the yieldable: ", yieldable);
 
-        console.log(" this might be fiber progres: ", nodes[2]?.progress);
+        // console.log(" this might be fiber progres: ", nodes[2]?.progress);
 
         // find with of the nodes has a "progress" signal:
-        const progress_node = nodes.find((node) => node.progress !== undefined);
+        // const progress_node = nodes.find((node) => node.progress !== undefined);
 
 
         // yield* all(...yieldable);
