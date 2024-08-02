@@ -113,7 +113,7 @@ class Message(BaseModel):
 def text_to_search(msg: Message):
 
     text = msg.message
-    prompt = f""" pull terms from the following text for building a knowledge graph: '{text}'"""
+    prompt = f""" pull terms from the following text for building a knowledge graph. Break into 1-3 word terms.: '{text}'"""
     logger.info("starting openai call: %s", prompt)
 
     completion = SearchTerms(search_terms=[])
@@ -285,13 +285,6 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     # try:
     user, completion = scene_model.client.chat.completions.create_with_completion(
         model=scene_model.model,
-        # model="gpt-4o",
-        # model="gpt-4o-mini",
-        # model="llama3-groq-70b-8192-tool-use-preview",
-        # model="llama-3.1-70b-versatile",
-        # model="llama-3.1-8b-instant",
-        # model="llama3-groq-8b-8192-tool-use-preview",
-        # model="mixtral-8x7b-32768",
         max_tokens = 3000,
         messages=[
             {

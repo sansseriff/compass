@@ -40,6 +40,11 @@ class Port(PModel):
     # super weird error that appeared over night: I can't use a 
     # Literal["portInput", "portOutput"] here. It throws an error with openai specifically
     port: str = Field(..., description="portInput, portOutput, ...")
+
+
+class Surface(PModel):
+    obj_id: str = Field(..., description="id of existing object . Like box1, fiber2, circle1, etc.")
+    surface: str = Field(..., description="surfaceTop, surfaceBottom, surfaceLeft, surfaceRight, ...")
     
     # Literal["portInput", "portOutput"] = "portInput"
 
@@ -65,6 +70,17 @@ class Port(PModel):
 
 class InterfaceFiber(PModel):
     t: Literal["InterfaceFiber"] #= Field("InterfaceFiber")
+    from_: Port
+    to: Port
+
+
+class InterfacePosition(PModel):
+    t: Literal["InterfacePosition"] = "InterfacePosition"
+    from_: Surface
+    to: Surface
+
+class InterfaceCable(PModel):
+    t: Literal["InterfaceCable"] = "InterfaceCable"
     from_: Port
     to: Port
 
@@ -164,6 +180,10 @@ class FiberPort(PModel):
     donate_position: bool
     donate_light: bool
 
+class SurfacePort(PModel):
+    donate_position: bool
+
+
 class Box(PModel):
     t: Literal["Box"] = "Box"
     id: str = Field(..., description="a unique id for the Box object. Like box1, box2, etc.")
@@ -207,7 +227,7 @@ class SuperBox(SuperNode):
     
 class Fiber(PModel):
     t: Literal["Fiber"] = "Fiber"
-    name: SkipJsonSchema[Literal["fiber", "cable", "wire"]] = "fiber"
+    name: SkipJsonSchema[Literal["fiber", "fiber optic", "optical fiber"]] = "fiber"
     id: str = Field(..., description="a unique id for the Fiber object. Like fiber1, fiber2, etc.")
     lineWidth: float = 2
 
@@ -225,13 +245,103 @@ class Fiber(PModel):
 
 
 class SuperFiber(SuperNode):
-    names = ["fiber", "cable", "wire"]
+    names = ["fiber", "fiber optic", "optical fiber"]
     def __init__(self):
         pass
     def model(self):
         return [Fiber]
     def add_interface(self):
         return [InterfaceFiber]
+    
+
+class Cable(PModel):
+    t: Literal["Cable"] = "Cable"
+    name: SkipJsonSchema[Literal["cable", "wire"]] = "cable"
+    id: str = Field(..., description="a unique id for the Cable object. Like cable1, cable2, etc.")
+    lineWidth: float = 2
+
+    # hidden
+    portInputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=False)
+    portOutputType: SkipJsonSchema[FiberPort] = FiberPort(donate_position=False, donate_light=True)
+
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': "Fiber", 
+            # 'notes': "Fiber is an OBJECT. Fiber is NOT an edge-like or interface-like entity. ",
+            'available_ports': ["portInput", "portOutput"]})
+    if not config_setter:
+        available_ports: Literal["portInput, portOutput"] = "portInput, portOutput"
+
+
+class SuperCable(SuperNode):
+    names = ["cable", "wire", "cord"]
+    def __init__(self):
+        pass
+    def model(self):
+        return [Cable]
+    def add_interface(self):
+        return [InterfaceCable]
+    
+
+class Podium(PModel):
+    t: Literal["Podium"] = "Podium"
+    name: SkipJsonSchema[Literal["podium", "stage", "platform"]] = "podium"
+    id: str = Field(..., description="a unique id for the Podium object. Like podium1, podium2, etc.")
+    width: float = 150
+    x: float
+    y: float
+
+    # hidden
+    surfaceType: SkipJsonSchema[SurfacePort] = SurfacePort(donate_position=True)
+
+
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': 'Podium', 
+            'available_ports': ["surfaceTop"]})
+    if not config_setter:
+        available_ports: Literal["surfaceTop"] = "surfaceTop"
+
+
+class SuperPodium(SuperNode):
+    names = ["podium", "stage", "platform"]
+    def __init__(self):
+        pass
+    def model(self):
+        return [Podium]
+    def add_interface(self):
+        return [InterfacePosition]
+    
+
+
+
+class Laptop(PModel):
+    t: Literal["Laptop"] = "Laptop"
+    name: SkipJsonSchema[Literal["laptop", "computer", "notebook"]] = "laptop"
+    id: str = Field(..., description="a unique id for the Laptop object. Like laptop1, laptop2, etc.")
+    width: float = 150
+    x: float
+    y: float
+
+    # hidden
+    surfaceType: SkipJsonSchema[SurfacePort] = SurfacePort(donate_position=False)
+
+    if config_setter:
+        model_config = ConfigDict(json_schema_extra={
+            # 't': 'Laptop', 
+            'available_ports': ["surfaceBottom"]})
+    if not config_setter:
+        available_ports: Literal["surfaceBottom"] = "surfaceBottom"
+
+
+class SuperLaptop(SuperNode):
+    names = ["laptop", "computer", "notebook"]
+    def __init__(self):
+        pass
+    def model(self):
+        return [Laptop]
+    def add_interface(self):
+        return [InterfacePosition]
     
 
 

@@ -3,13 +3,15 @@
         {
             "t": "Laser",
             "id": "laser1",
-            "x": -300,
+            "x": -400,
             "y": 0,
             "on": true
         },
         {
-            "t": "Fiber",
-            "id": "fiber1"
+            "t": "Detector",
+            "id": "detector1",
+            "x": 400,
+            "y": 0
         },
         {
             "t": "Switch",
@@ -19,13 +21,11 @@
         },
         {
             "t": "Fiber",
-            "id": "fiber2"
+            "id": "fiber1"
         },
         {
-            "t": "Detector",
-            "id": "detector1",
-            "x": 300,
-            "y": 0
+            "t": "Fiber",
+            "id": "fiber2"
         }
     ],
     "interfaces": [
