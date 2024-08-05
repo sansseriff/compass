@@ -80,7 +80,6 @@ export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | nu
     StageInstance.finalBuffer.parentElement === previewRef
   ) {
 
-    console.log("removing")
     previewRef?.removeChild(StageInstance.finalBuffer);
   }
 

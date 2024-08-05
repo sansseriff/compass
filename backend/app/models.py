@@ -11,24 +11,25 @@ from pydantic_core import CoreSchema
 
 class PModel(BaseModel):
 
-    # pass
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls,
-        __core_schema: CoreSchema,
-        __handler):
-        schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
-        def remove_titles(d: dict):
-            d.pop('title', None)
-            for value in d.values():
-                if isinstance(value, dict):
-                    remove_titles(value)
+    pass
+    
+    # @classmethod
+    # def __get_pydantic_json_schema__(
+    #     cls,
+    #     __core_schema: CoreSchema,
+    #     __handler):
+    #     schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
+    #     def remove_titles(d: dict):
+    #         d.pop('title', None)
+    #         for value in d.values():
+    #             if isinstance(value, dict):
+    #                 remove_titles(value)
 
-        schema.pop('title', None)
-        for prop in schema.get('properties', {}).values():
-            remove_titles(prop)
+    #     schema.pop('title', None)
+    #     for prop in schema.get('properties', {}).values():
+    #         remove_titles(prop)
 
-        return schema
+    #     return schema
 
 
 config_setter = False
@@ -48,25 +49,7 @@ class Surface(PModel):
     
     # Literal["portInput", "portOutput"] = "portInput"
 
-    
 
-    # @classmethod
-    # def __get_pydantic_json_schema__(
-    #     cls,
-    #     __core_schema: CoreSchema,
-    #     __handler):
-    #     schema = super().__get_pydantic_json_schema__(__core_schema, __handler)
-    #     def remove_titles(d: dict):
-    #         d.pop('title', None)
-    #         for value in d.values():
-    #             if isinstance(value, dict):
-    #                 remove_titles(value)
-
-    #     schema.pop('title', None)
-    #     for prop in schema.get('properties', {}).values():
-    #         remove_titles(prop)
-
-    #     return schema
 
 class InterfaceFiber(PModel):
     t: Literal["InterfaceFiber"] #= Field("InterfaceFiber")
@@ -206,15 +189,6 @@ class Box(PModel):
         available_ports: Literal["portInput, portOutput"] = "portInput, portOutput"
 
 
-    @classmethod
-    def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
-        schema = super().model_json_schema(*args, **kwargs)
-
-        schema.pop('title', None)
-        for prop in schema.get('properties', {}).values():
-            prop.pop('title', None)
-
-        return schema
 
 class SuperBox(SuperNode):
     names = ["box", "object"]
@@ -404,15 +378,6 @@ class Switch(PModel):
         available_ports: Literal["portInput, portOutput"] = "portInput, portOutput"
 
 
-    @classmethod
-    def model_json_schema(cls, *args, **kwargs) -> dict[str, Any]:
-        schema = super().model_json_schema(*args, **kwargs)
-
-        schema.pop('title', None)
-        for prop in schema.get('properties', {}).values():
-            prop.pop('title', None)
-
-        return schema
     
 
 class SuperDetector(SuperNode):

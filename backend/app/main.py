@@ -6,6 +6,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from typing import Unpack
+
 
 from openai.types.chat import ChatCompletionMessageToolCall
 from openai.types.chat import ChatCompletion
@@ -16,7 +18,7 @@ from typing import Literal, Union, Type
 
 from pydantic import Field
 
-from backend.server_logging import get_logger
+from app.server_logging import get_logger
 logger = get_logger(__name__)
 
 from pydantic import BaseModel, create_model
@@ -34,9 +36,9 @@ from dotenv import load_dotenv  # Import load_dotenv
 import openai
 from groq import Groq
 
-from backend.models import Circle, Polygon, Rect
+from app.models import Circle, Polygon, Rect
 
-from backend.models import SuperNode
+from app.models import SuperNode
 from typing import cast
 from typing import Any
 
@@ -151,7 +153,7 @@ def text_to_search(msg: Message):
 
 
 def search_search(s: SearchTerms):
-    models_module = importlib.import_module("backend.models")
+    models_module = importlib.import_module("app.models")
     print("search terms: ", s.search_terms)
     matched_objects: list[type[BaseModel]] = []
     matched_interfaces: list[type[BaseModel]] = []
@@ -227,7 +229,9 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     if len(matched_objects) == 0:
         return None
     
-    GenericObject = Annotated[Union[*matched_objects], Field(discriminator='t')] # type: ignore
+
+    # UnionMatchedObjects = Union[*matched_objects]
+    GenericObject = Annotated[Union[*matched_objects], Field(discriminator='t')]
     
 
     if len(matched_interfaces) == 0:
@@ -235,14 +239,14 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
             'ReturnType',
             objects=(list[GenericObject], ...))
     else:
-        GenericInterface = Union[*matched_interfaces] # type: ignore
+        GenericInterface = Union[*matched_interfaces]
         
         ReturnType = create_model(
             'ReturnType',
             objects=(list[GenericObject], ...),
             interfaces=(list[GenericInterface], ...))
 
-        
+    print("DONE CREATING RETURN TYPE")
 
     # print("Recturn Type schema: ", ReturnType.model_json_schema())
 
@@ -281,6 +285,8 @@ def matches_to_scene(matched_objects: list[type[BaseModel]], matched_interfaces:
     The scene description: {text}"""
 
     print("USING SCENE MODEL: ", scene_model.model)
+
+    print("this is return type: ", ReturnType)
 
     # try:
     user, completion = scene_model.client.chat.completions.create_with_completion(

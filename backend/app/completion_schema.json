@@ -8,20 +8,25 @@
                     "enum": [
                         "Detector"
                     ],
+                    "title": "T",
                     "type": "string"
                 },
                 "id": {
                     "description": "a unique id for the Detector object. Like detector1, detector2, etc.",
+                    "title": "Id",
                     "type": "string"
                 },
                 "width": {
                     "default": 110,
+                    "title": "Width",
                     "type": "number"
                 },
                 "x": {
+                    "title": "X",
                     "type": "number"
                 },
                 "y": {
+                    "title": "Y",
                     "type": "number"
                 },
                 "available_ports": {
@@ -30,6 +35,7 @@
                     "enum": [
                         "portInput"
                     ],
+                    "title": "Available Ports",
                     "type": "string"
                 }
             },
@@ -38,6 +44,7 @@
                 "x",
                 "y"
             ],
+            "title": "Detector",
             "type": "object"
         },
         "Fiber": {
@@ -48,14 +55,17 @@
                     "enum": [
                         "Fiber"
                     ],
+                    "title": "T",
                     "type": "string"
                 },
                 "id": {
                     "description": "a unique id for the Fiber object. Like fiber1, fiber2, etc.",
+                    "title": "Id",
                     "type": "string"
                 },
                 "lineWidth": {
                     "default": 2,
+                    "title": "Linewidth",
                     "type": "number"
                 },
                 "available_ports": {
@@ -64,12 +74,14 @@
                     "enum": [
                         "portInput, portOutput"
                     ],
+                    "title": "Available Ports",
                     "type": "string"
                 }
             },
             "required": [
                 "id"
             ],
+            "title": "Fiber",
             "type": "object"
         },
         "InterfaceFiber": {
@@ -79,6 +91,7 @@
                     "enum": [
                         "InterfaceFiber"
                     ],
+                    "title": "T",
                     "type": "string"
                 },
                 "from_": {
@@ -93,6 +106,7 @@
                 "from_",
                 "to"
             ],
+            "title": "InterfaceFiber",
             "type": "object"
         },
         "Laser": {
@@ -103,24 +117,30 @@
                     "enum": [
                         "Laser"
                     ],
+                    "title": "T",
                     "type": "string"
                 },
                 "x": {
+                    "title": "X",
                     "type": "number"
                 },
                 "y": {
+                    "title": "Y",
                     "type": "number"
                 },
                 "width": {
                     "default": 145,
+                    "title": "Width",
                     "type": "number"
                 },
                 "id": {
                     "description": "a unique id. Like laser1, laser2, etc.",
+                    "title": "Id",
                     "type": "string"
                 },
                 "on": {
                     "default": false,
+                    "title": "On",
                     "type": "boolean"
                 },
                 "available_ports": {
@@ -129,6 +149,7 @@
                     "enum": [
                         "portOutput"
                     ],
+                    "title": "Available Ports",
                     "type": "string"
                 }
             },
@@ -137,16 +158,19 @@
                 "y",
                 "id"
             ],
+            "title": "Laser",
             "type": "object"
         },
         "Port": {
             "properties": {
                 "obj_id": {
                     "description": "id of existing object . Like box1, fiber2, circle1, etc.",
+                    "title": "Obj Id",
                     "type": "string"
                 },
                 "port": {
                     "description": "portInput, portOutput, ...",
+                    "title": "Port",
                     "type": "string"
                 }
             },
@@ -154,6 +178,7 @@
                 "obj_id",
                 "port"
             ],
+            "title": "Port",
             "type": "object"
         },
         "Switch": {
@@ -164,25 +189,31 @@
                     "enum": [
                         "Switch"
                     ],
+                    "title": "T",
                     "type": "string"
                 },
                 "id": {
                     "description": "a unique id for the Switch object. Like switch1, switch2, etc.",
+                    "title": "Id",
                     "type": "string"
                 },
                 "width": {
                     "default": 120,
+                    "title": "Width",
                     "type": "number"
                 },
                 "x": {
+                    "title": "X",
                     "type": "number"
                 },
                 "y": {
+                    "title": "Y",
                     "type": "number"
                 },
                 "open": {
                     "default": false,
                     "description": "if switch is internally open or closed. Has no impact on connected ports",
+                    "title": "Open",
                     "type": "boolean"
                 },
                 "available_ports": {
@@ -191,6 +222,7 @@
                     "enum": [
                         "portInput, portOutput"
                     ],
+                    "title": "Available Ports",
                     "type": "string"
                 }
             },
@@ -199,6 +231,7 @@
                 "x",
                 "y"
             ],
+            "title": "Switch",
             "type": "object"
         }
     },
