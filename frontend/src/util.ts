@@ -19,6 +19,7 @@ import {
   DefaultPlugin,
   createRef,
   all,
+  Vector2
 } from "@motion-canvas/core";
 
 import { makeScene2D, Code, LezerHighlighter } from "@motion-canvas/2d";
@@ -47,20 +48,16 @@ export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | nu
     // enter here for player resize or scene change. These ops do not require a whole new player
 
     if (CurrentWidth !== width) {
-      ProjectInstance.meta.shared.size.set([Math.floor(width), Math.floor(width / ratio)]);
-  
-      // console.log("setting size to: ", [Math.floor(width), Math.floor(width / ratio)])
-      // ProjectInstance.meta.preview.resolutionScale.set(1);
+      ProjectInstance.meta.shared.size.set(new Vector2(Math.floor(width), Math.floor(width / ratio)));
 
-      // console.log("setting resolution scale to: ", ProjectInstance.meta.preview.resolutionScale.get(), "width: ", width)
 
       Description.onReplaced.current = {
       ...Description.onReplaced.current,
-      size: ProjectInstance.meta.shared.size.get(),
+      // size: ProjectInstance.meta.shared.size.get(),
       // resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
     };
     StageInstance.configure({
-      size: ProjectInstance.meta.shared.size.get(),
+      // size: ProjectInstance.meta.shared.size.get(),
       // resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
     });
     CurrentWidth = width;
@@ -98,18 +95,18 @@ export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | nu
   } as Project;
 
   ProjectInstance.meta = new ProjectMetadata(ProjectInstance);
-  ProjectInstance.meta.shared.size.set(960);
-  // ProjectInstance.meta.preview.resolutionScale.set(1);
+  ProjectInstance.meta.shared.size.set(1920);
+  ProjectInstance.meta.preview.resolutionScale.set(1);
   PlayerInstance = new Player(ProjectInstance, {
     fps: 60,
     size: ProjectInstance.meta.shared.size.get(),
-    // resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
+    resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
   });
 
   StageInstance = new Stage();
   StageInstance.configure({
     size: ProjectInstance.meta.shared.size.get(),
-    // resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
+    resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
   });
 
   PlayerInstance.onRender.subscribe(async () => {
@@ -155,11 +152,11 @@ export function borrowPlayer(previewRef: HTMLDivElement, player: PlayerType | nu
     Description.onReplaced.current = {
       ...Description.onReplaced.current,
       size: ProjectInstance.meta.shared.size.get(),
-      // resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
+      resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
     };
     StageInstance.configure({
       size: ProjectInstance.meta.shared.size.get(),
-      // resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
+      resolutionScale: ProjectInstance.meta.preview.resolutionScale.get(),
     });
     CurrentWidth = width;
   }

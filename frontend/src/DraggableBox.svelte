@@ -12,6 +12,7 @@
         x: number;
         y: number;
         width: number;
+        height: number;
         idx: number;
         scalar: number
     }
@@ -20,7 +21,7 @@
     //     scaled_boxes: sc;
     // }
 
-    let { x, y, width, idx, scalar }: Props = $props();
+    let { x, y, width, height, idx, scalar }: Props = $props();
     
   
     let startX, startY, initialX, initialY;
@@ -43,8 +44,8 @@
       console.log("I have a: ", globalRefs.nodes[idx].constructor.name)
       x = initialX + (event.clientX - startX);
       y = initialY + (event.clientY - startY);
-      globalRefs.nodes[idx].x(x/scalar - 960/2 + globalRefs.nodes[idx].width()/2);
-      globalRefs.nodes[idx].y(y/scalar - 960/4 + globalRefs.nodes[idx].width()*0.65/2);
+      globalRefs.nodes[idx].x(x/scalar - 1920/2 + width/scalar/2);
+      globalRefs.nodes[idx].y(y/scalar - 1920/4 - height/scalar/2);
       // console.log(globalRefs.nodes[idx].x())
       
 
@@ -70,6 +71,6 @@
   
   <div
     class="box"
-    style="left: {x}px; top: {y}px; width: {width}px; height: {Math.floor(width*0.65)}px;"
+    style="left: {x}px; top: {y}px; width: {width}px; height: {height}px;"
     onmousedown={handleMouseDown}
   ></div>

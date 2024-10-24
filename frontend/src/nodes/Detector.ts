@@ -38,54 +38,69 @@ export class Detector extends Node {
   @signal()
   public declare readonly width: SimpleSignal<number, void>;
 
+  @signal()
+  public declare readonly height: SimpleSignal<number, void>;
+
+  @signal()
+  public declare readonly visible_height: SimpleSignal<number, void>;
+
   private img: Img;
   private port_input: Circle;
   //   private port_output: Circle;
 
   public constructor(props?: DetectorProps) {
-    super({
-      ...props,
-    });
 
-    // to be overridden
-    this.portInput = {
-      position: createSignal(new Vector2(0, 0)),
-      light: createSignal(false),
-    };
-    // this.portOutput = {
-    //   position: createSignal(new Vector2(0, 0)),
-    //   light: createSignal(false),
-    // };
+    try {
+      super({
+        ...props,
+      });
+  
+      // to be overridden
+      this.portInput = {
+        position: createSignal(new Vector2(0, 0)),
+        light: createSignal(false),
+      };
+  
+      this.port_input = new Circle({
+        x: -this.width() / 2  + this.width()/30,
+        y: 0,
+        width: 1,
+        height: 20,
+        fill: "black",
+        opacity: 0,
+      });
+  
+      this.on = createSignal(() => this.portInput.light());
 
-    this.port_input = new Circle({
-      x: -this.width() / 2  + this.width()/30,
-      y: 0,
-      width: 1,
-      height: 20,
-      fill: "black",
-      opacity: 0,
-    });
-    // this.port_output = new Circle({
-    //   x: 30,
-    //   y: 0,
-    //   width: 3,
-    //   height: 20,
-    //   fill: "black",
-    //   opacity: 0,
-    // });
+      console.log("detector on hieght: ", detector_on.naturalHeight)
+  
+      this.img = new Img({
+        width: this.width,
+        src: () => (this.on() ? detector_on : detector_off),
+        children: [this.port_input],
+      });
+  
+  
+      console.log("why would this print twice")
+  
+      this.add(this.img);
+  
 
-    this.on = createSignal(() => this.portInput.light());
 
-    this.img = new Img({
-      width: this.width,
-      src: () => (this.on() ? detector_on : detector_off),
-      children: [this.port_input],
-    });
+      // // here
+      // console.log("natural size: ", this.img.naturalSize())
 
-    this.add(this.img);
+      this.visible_height(() => this.img.height());
 
-    this.portInput.position = createSignal(() =>
-      this.port_input.absolutePosition()
-    );
+  
+      this.portInput.position = createSignal(() =>
+        this.port_input.absolutePosition()
+      );
+    }
+
+    catch (error) {
+      console.log("error in Detector constructor: ", error)
+    }
+    
   }
 }

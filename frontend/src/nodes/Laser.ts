@@ -34,6 +34,10 @@ export class Laser extends Node {
   @signal()
   public declare readonly width: SimpleSignal<number, void>;
 
+
+  @signal()
+  public declare readonly visible_height: SimpleSignal<number, void>;
+
   @signal()
   public declare readonly fill: SimpleSignal<PossibleColor>;
 
@@ -67,6 +71,9 @@ export class Laser extends Node {
       src: () => (this.on() ? laser_on : laser_off),
       children: [this.port_1],
     });
+
+
+    this.visible_height(() => this.img.height());
 
     // this.img.src(() => this.on() ? laser_on : laser_off)
 

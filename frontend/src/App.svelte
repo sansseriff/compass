@@ -62,6 +62,7 @@
   let previewRef: HTMLDivElement;
   let padding_width = 30;
   let canvas_width = $state(500);
+  let canvas_display_width = $state(500);
 
   let currentSceneScalable;
 
@@ -153,33 +154,38 @@
   }
 
   function init() {
-    const size = document.body.clientWidth / 2;
+
+    const true_pixel_width =  document.body.clientWidth*window.devicePixelRatio;
+    const size = true_pixel_width / 2;
+    console.log("Device Pixel Ratio:", window.devicePixelRatio);
+    console.log("initial client width: ", size);
     currentSceneScalable = createInitialScalableScene();
 
-    const containerWidth = document.body.clientWidth;
-    const initialWidthPx = document.body.clientWidth * (visualAreaWidth / 100);
+    const containerWidth = document.body.clientWidth*window.devicePixelRatio;
+    const initialWidthPx = document.body.clientWidth*window.devicePixelRatio*2 * (visualAreaWidth / 100);
 
     const rightWidthPx = containerWidth - initialWidthPx;
     player = borrowPlayer(previewRef, player, rightWidthPx, variables);
-    updatePlayer(currentSceneScalable(canvas_width / 960));
+    updatePlayer(currentSceneScalable(canvas_width / window.devicePixelRatio / 1920));
   }
 
   let visualAreaWidth = $state(50); // Initial width in percentage
 
   function startDrag(event) {
-    const startX = event.clientX;
-    const initialWidthPx = document.body.clientWidth - event.clientX;
+    const startX = event.clientX*window.devicePixelRatio*2;
+    const initialWidthPx = document.body.clientWidth*window.devicePixelRatio - startX;
     function onMouseMove(event) {
-      const dx = event.clientX - startX;
-      const containerWidth = document.body.clientWidth;
+      const dx = window.devicePixelRatio * (event.clientX*window.devicePixelRatio*2 - startX);
+      const containerWidth = document.body.clientWidth*window.devicePixelRatio;
 
       const newWidthPx = initialWidthPx - dx - 2 * padding_width * 0.95;
 
       canvas_width = Math.floor(newWidthPx);
+      canvas_display_width = Math.floor(newWidthPx/(window.devicePixelRatio*2))
 
       // const scene = createScene(canvas_width / 960);
       player = borrowPlayer(previewRef, player, canvas_width);
-      updatePlayer(currentSceneScalable(canvas_width / 960));
+      updatePlayer(currentSceneScalable(canvas_width / window.devicePixelRatio / 1920));
 
       console.log("this should be scaling")
       scaled_boxes = getScaledBoxes();
@@ -236,7 +242,7 @@
         currentSceneScalable = createSceneFromText(response);
 
         // console.log("scene: ", scene);
-        updatePlayer(currentSceneScalable(canvas_width / 960));
+        updatePlayer(currentSceneScalable(canvas_width /  window.devicePixelRatio / 1920));
         loading = false;
 
         setTimeout(() => {
@@ -245,7 +251,7 @@
             if (node.constructor.name !== "Fiber") {
               console.log("node name: ", node.constructor.name);
               if (node.width) {
-                boxes.push({ x: node.x() + 960/2 - node.width()/2, y: node.y() + 960/4 - node.width()*0.65*0.5, width: node.width(), idx: index});
+                boxes.push({ x: node.x() + 1920/2 - node.width()/2, y: node.y() + 1920/4 - node.width()*0.65*0.5, width: node.width(), idx: index});
                 // boxes.push({x: 0, y: 0, width: 100});
               }
               // boxes.push({ x: node.x(), y: node.y(), width:  });
@@ -313,19 +319,19 @@
     x: number;
     y: number;
     width: number;
-    // height: number;
+    height: number;
     idx: number;
   }
   let boxes: Array<BBox> = [];
 
   function getScaledBoxes() {
-    const scale = canvas_width / 960;
+    const scale = canvas_width / 1920;
     console.log("scale: ", scale);
     return boxes.map((box) => ({
       x: Math.floor(box.x * scale),
       y: Math.floor(box.y * scale),
       width: Math.floor(box.width * scale),
-      // height: Math.floor(box.height * scale),
+      height: Math.floor(box.height * scale),
       idx: box.idx,
     }));
   }
@@ -333,6 +339,11 @@
   let scaled_boxes: Array<BBox> = $state();
 
   // let scaled_boxes = $derived.by(() => getScaledBoxes());
+
+
+  $effect(() => {
+    console.log("canvas_width: ", canvas_width);
+  });
 </script>
 
 <div class="container">
@@ -405,7 +416,7 @@
         </div>
         <div class="draggable-container">
           {#each scaled_boxes as scaled_box}
-            <DraggableBox {...scaled_box} scalar={canvas_width/960} />
+            <DraggableBox {...scaled_box} scalar={canvas_width/1920} />
           {/each}
         </div>
         <!-- </div> -->

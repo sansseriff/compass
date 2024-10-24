@@ -40,6 +40,10 @@ export class Switch extends Node {
   @signal()
   public declare readonly width: SimpleSignal<number, void>;
 
+  
+  @signal()
+  public declare readonly visible_height: SimpleSignal<number, void>;
+
   private img: Img;
   private port_input: Circle;
   private port_output: Circle;
@@ -76,6 +80,9 @@ export class Switch extends Node {
       opacity: 0,
     });
 
+    
+
+
     this.portOutput.light(!this.open() ? () => this.portInput.light() : false)
 
     // this.open = createSignal(() => this.portInput.light());
@@ -87,6 +94,9 @@ export class Switch extends Node {
     });
 
     this.add(this.img);
+
+
+    this.visible_height( () => this.img.height());
 
     this.portInput.position = createSignal(() =>
       this.port_input.absolutePosition()

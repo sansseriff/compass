@@ -2,34 +2,71 @@
     "objects": [
         {
             "t": "Laser",
-            "x": 0,
-            "y": 0,
             "id": "laser1",
+            "x": -300,
+            "y": 100,
             "on": true
         },
         {
-            "t": "Detector",
-            "x": 240,
-            "y": 0,
-            "id": "detector1"
-        },
-        {
             "t": "Fiber",
-            "x": 120,
-            "y": 0,
             "id": "fiber1"
         },
         {
             "t": "Switch",
-            "x": 120,
-            "y": -60,
-            "id": "switch1"
+            "id": "switch1",
+            "x": -100,
+            "y": 100
         },
         {
             "t": "Fiber",
-            "x": 120,
-            "y": -60,
             "id": "fiber2"
+        },
+        {
+            "t": "Detector",
+            "id": "detector1",
+            "x": 100,
+            "y": 100
+        },
+        {
+            "t": "Fiber",
+            "id": "fiber3"
+        },
+        {
+            "t": "Switch",
+            "id": "switch2",
+            "x": -100,
+            "y": -100,
+            "open": true
+        },
+        {
+            "t": "Fiber",
+            "id": "fiber4"
+        },
+        {
+            "t": "Detector",
+            "id": "detector2",
+            "x": 100,
+            "y": -100
+        },
+        {
+            "t": "Polygon",
+            "id": "triangle1",
+            "sides": 3,
+            "name": "triangle",
+            "x": -350,
+            "y": -200,
+            "stroke": "blue",
+            "lineWidth": 3
+        },
+        {
+            "t": "Polygon",
+            "id": "pentagon1",
+            "sides": 5,
+            "name": "pentagon",
+            "x": 300,
+            "y": 200,
+            "stroke": "red",
+            "lineWidth": 3
         }
     ],
     "interfaces": [
@@ -74,6 +111,50 @@
             },
             "to": {
                 "obj_id": "detector1",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "laser1",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "fiber3",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "fiber3",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "switch2",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "switch2",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "fiber4",
+                "port": "portInput"
+            }
+        },
+        {
+            "t": "InterfaceFiber",
+            "from_": {
+                "obj_id": "fiber4",
+                "port": "portOutput"
+            },
+            "to": {
+                "obj_id": "detector2",
                 "port": "portInput"
             }
         }

@@ -259,6 +259,8 @@ export function createSceneFromText(
 
         console.log("adding to global refs. ");
 
+        // console.log("arguments.callee.caller.name", arguments.callee.caller.name);
+
         globalRefs.nodes = nodes;
 
         // yield* all(

@@ -161,6 +161,82 @@
             "title": "Laser",
             "type": "object"
         },
+        "Polygon": {
+            "properties": {
+                "t": {
+                    "const": "Polygon",
+                    "default": "Polygon",
+                    "enum": [
+                        "Polygon"
+                    ],
+                    "title": "T",
+                    "type": "string"
+                },
+                "name": {
+                    "default": "polygon",
+                    "enum": [
+                        "polygon",
+                        "triangle",
+                        "pentagon",
+                        "hexagon",
+                        "octagon",
+                        "nonagon",
+                        "decagon",
+                        "dodecagon"
+                    ],
+                    "title": "Name",
+                    "type": "string"
+                },
+                "sides": {
+                    "description": "number of polygon sides. 3 is triangle, 5 is pentagon, etc.",
+                    "title": "Sides",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "a unique id for the Polygon. Like poly1, poly2, etc.",
+                    "title": "Id",
+                    "type": "string"
+                },
+                "fill": {
+                    "default": "gray",
+                    "title": "Fill",
+                    "type": "string"
+                },
+                "stroke": {
+                    "default": "gray",
+                    "description": "color of stroke, edge, or border",
+                    "title": "Stroke",
+                    "type": "string"
+                },
+                "size": {
+                    "default": 50,
+                    "title": "Size",
+                    "type": "number"
+                },
+                "x": {
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "title": "Y",
+                    "type": "number"
+                },
+                "lineWidth": {
+                    "default": 0,
+                    "description": "width of stroke, edge, or border",
+                    "title": "Linewidth",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "sides",
+                "id",
+                "x",
+                "y"
+            ],
+            "title": "Polygon",
+            "type": "object"
+        },
         "Port": {
             "properties": {
                 "obj_id": {
@@ -243,6 +319,7 @@
                         "Detector": "#/$defs/Detector",
                         "Fiber": "#/$defs/Fiber",
                         "Laser": "#/$defs/Laser",
+                        "Polygon": "#/$defs/Polygon",
                         "Switch": "#/$defs/Switch"
                     },
                     "propertyName": "t"
@@ -256,6 +333,9 @@
                     },
                     {
                         "$ref": "#/$defs/Laser"
+                    },
+                    {
+                        "$ref": "#/$defs/Polygon"
                     },
                     {
                         "$ref": "#/$defs/Switch"
